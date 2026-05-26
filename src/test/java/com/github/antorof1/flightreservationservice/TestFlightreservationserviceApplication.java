@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 public class TestFlightreservationserviceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.from(FlightreservationserviceApplication::main).with(TestcontainersConfiguration.class).run(args);
+		SpringApplication.from(FlightReservationServiceApplication::main).with(TestcontainersConfiguration.class).run(args);
 	}
 
 }
