@@ -26,13 +26,14 @@ public class Seat {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private SeatStatus status;
 
     public Seat() {
     }
 
-    public Seat(Flight flight, String seatNumber, SeatClass seatClass, BigDecimal price, String status) {
+    public Seat(Flight flight, String seatNumber, SeatClass seatClass, BigDecimal price, SeatStatus status) {
         this.flight = flight;
         this.seatNumber = seatNumber;
         this.seatClass = seatClass;
@@ -80,11 +81,11 @@ public class Seat {
         this.price = price;
     }
 
-    public String getStatus() {
+    public SeatStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SeatStatus status) {
         this.status = status;
     }
 }
