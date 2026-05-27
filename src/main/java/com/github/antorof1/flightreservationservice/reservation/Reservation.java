@@ -21,8 +21,9 @@ public class Reservation {
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private ReservationStatus status;
 
     @Column(nullable = false)
     private OffsetDateTime createdAt;
@@ -33,7 +34,7 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(User user, Seat seat, String status, OffsetDateTime createdAt, OffsetDateTime expiresAt) {
+    public Reservation(User user, Seat seat, ReservationStatus status, OffsetDateTime createdAt, OffsetDateTime expiresAt) {
         this.user = user;
         this.seat = seat;
         this.status = status;
@@ -65,11 +66,11 @@ public class Reservation {
         this.seat = seat;
     }
 
-    public String getStatus() {
+    public ReservationStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(ReservationStatus status) {
         this.status = status;
     }
 
