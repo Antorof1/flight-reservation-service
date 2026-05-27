@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.flight.dto;
 
+import com.github.antorof1.flightreservationservice.flight.Flight;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -21,4 +22,15 @@ public record CreateFlightRequest(
     @NotNull
     OffsetDateTime arrivalTime
 ) {
+    public Flight toEntity() {
+        Flight flight = new Flight();
+
+        flight.setFlightNumber(flightNumber);
+        flight.setDepartureAirport(departureAirport);
+        flight.setArrivalAirport(arrivalAirport);
+        flight.setDepartureTime(departureTime);
+        flight.setArrivalTime(arrivalTime);
+
+        return flight;
+    }
 }

@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.seat.dto;
 
+import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 
@@ -12,4 +13,13 @@ public record SeatResponse(
     BigDecimal price,
     SeatStatus status
 ) {
+    public static SeatResponse fromEntity(Seat seat) {
+        return new SeatResponse(
+            seat.getId(),
+            seat.getSeatNumber(),
+            seat.getSeatClass(),
+            seat.getPrice(),
+            seat.getStatus()
+        );
+    }
 }
