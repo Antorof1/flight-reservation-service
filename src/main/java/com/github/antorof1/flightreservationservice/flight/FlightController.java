@@ -5,14 +5,12 @@ import com.github.antorof1.flightreservationservice.flight.dto.FlightResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/flights")
-@Validated
 public class FlightController {
     private final FlightService flightService;
 
