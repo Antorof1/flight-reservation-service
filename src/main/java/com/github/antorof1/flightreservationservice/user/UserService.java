@@ -2,10 +2,12 @@ package com.github.antorof1.flightreservationservice.user;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class UserService {
     private final UserRepository userRepository;
 
@@ -13,6 +15,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Transactional
     public User createUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email is already in use: " + user.getEmail());
@@ -35,6 +38,7 @@ public class UserService {
             "with email: " + email));
     }
 
+    @Transactional
     public User updateUser(Long id, User userDetails) {
         User user = getUserById(id);
 
@@ -48,6 +52,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         User user = getUserById(id);
         userRepository.delete(user);

@@ -3,10 +3,12 @@ package com.github.antorof1.flightreservationservice.seat;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class SeatService {
     private final SeatRepository seatRepository;
 
@@ -14,6 +16,7 @@ public class SeatService {
         this.seatRepository = seatRepository;
     }
 
+    @Transactional
     public Seat addSeat(Seat seat) {
         if (seatRepository.existsByFlightAndSeatNumber(seat.getFlight(), seat.getSeatNumber())) {
             throw new IllegalArgumentException(
@@ -41,6 +44,7 @@ public class SeatService {
             .orElseThrow(() -> new ResourceNotFoundException("Seat not found with id: " + id));
     }
 
+    @Transactional
     public Seat updateSeat(Long id, Seat seatDetails) {
         Seat seat = getSeatById(id);
 
@@ -63,6 +67,7 @@ public class SeatService {
         return seatRepository.save(seat);
     }
 
+    @Transactional
     public Seat updateSeatStatus(Long id, SeatStatus status) {
         Seat seat = getSeatById(id);
 
@@ -71,6 +76,7 @@ public class SeatService {
         return seatRepository.save(seat);
     }
 
+    @Transactional
     public void deleteSeat(Long id) {
         Seat seat = getSeatById(id);
         seatRepository.delete(seat);

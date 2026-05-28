@@ -3,10 +3,12 @@ package com.github.antorof1.flightreservationservice.reservation;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.user.User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ReservationService {
     private final ReservationRepository reservationRepository;
 
@@ -14,6 +16,7 @@ public class ReservationService {
         this.reservationRepository = reservationRepository;
     }
 
+    @Transactional
     public Reservation createReservation(Reservation reservation) {
         return reservationRepository.save(reservation);
     }
@@ -31,6 +34,7 @@ public class ReservationService {
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with id: " + id));
     }
 
+    @Transactional
     public Reservation updateReservation(Long id, Reservation reservationDetails) {
         Reservation reservation = getReservationById(id);
 
@@ -43,6 +47,7 @@ public class ReservationService {
         return reservationRepository.save(reservation);
     }
 
+    @Transactional
     public void deleteReservation(Long id) {
         Reservation reservation = getReservationById(id);
         reservationRepository.delete(reservation);
