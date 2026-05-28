@@ -13,7 +13,7 @@ public record ReservationResponse(
     SeatResponse seat,
     FlightResponse flight,
     ReservationStatus status,
-    OffsetDateTime cratedAt,
+    OffsetDateTime createdAt,
     OffsetDateTime expiresAt
 ) {
     public static ReservationResponse fromEntity(Reservation reservation) {
