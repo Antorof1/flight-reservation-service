@@ -1,6 +1,7 @@
 package com.github.antorof1.flightreservationservice.seat;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +28,14 @@ public class SeatService {
         return seatRepository.findAll();
     }
 
+    public List<Seat> getSeatsByFlightId(Long flightId, @Nullable SeatStatus status) {
+        if (status != null) {
+            return seatRepository.findByFlightIdAndStatus(flightId, status);
+        }
+
+        return seatRepository.findByFlightId(flightId);
+    }
+
     public Seat getSeatById(Long id) {
         return seatRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Seat not found with id: " + id));
@@ -50,6 +59,14 @@ public class SeatService {
         seat.setSeatClass(seatDetails.getSeatClass());
         seat.setPrice(seatDetails.getPrice());
         seat.setStatus(seatDetails.getStatus());
+
+        return seatRepository.save(seat);
+    }
+
+    public Seat updateSeatStatus(Long id, SeatStatus status) {
+        Seat seat = getSeatById(id);
+
+        seat.setStatus(status);
 
         return seatRepository.save(seat);
     }
