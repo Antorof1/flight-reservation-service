@@ -1,6 +1,7 @@
 package com.github.antorof1.flightreservationservice.reservation;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
+import com.github.antorof1.flightreservationservice.user.User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,6 +20,10 @@ public class ReservationService {
 
     public List<Reservation> getAllReservations() {
         return reservationRepository.findAll();
+    }
+
+    public List<Reservation> getAllReservationsByUser(User user) {
+        return reservationRepository.findAllByUser(user);
     }
 
     public Reservation getReservationById(Long id) {
