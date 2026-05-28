@@ -41,8 +41,8 @@ public class SeatService {
         if ((flightChanged || seatNumberChanged) &&
             seatRepository.existsByFlightAndSeatNumber(seatDetails.getFlight(), seatDetails.getSeatNumber())) {
             throw new IllegalArgumentException(
-                "Flight and seat number combination is already in use: " + seat.getFlight().getId() + " " +
-                    seat.getSeatNumber());
+                "Flight and seat number combination is already in use: " + seatDetails.getFlight().getId() + " " +
+                    seatDetails.getSeatNumber());
         }
 
         seat.setFlight(seatDetails.getFlight());
