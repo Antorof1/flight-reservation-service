@@ -155,6 +155,29 @@ public class ReservationService {
     }
 
     @Transactional
+    public void cleanUpExpiredReservations() {
+        List<Reservation> reservations = reservationRepository
+            .findByStatusAndExpiresAtBefore(ReservationStatus.PENDING, OffsetDateTime.now());
+
+        for (Reservation reservation : reservations) {
+            cleanUpExpiredReservation(reservation);
+        }
+    }
+
+    @Transactional
+    public void cleanUpExpiredReservation(Reservation reservation) {
+        reservation.setStatus(ReservationStatus.CANCELLED);
+
+        Seat seat = reservation.getSeat();
+
+        if (seat.getStatus() == SeatStatus.HELD) {
+            seatService.updateSeatStatus(seat.getId(), SeatStatus.AVAILABLE);
+        }
+
+        reservationRepository.save(reservation);
+    }
+
+    @Transactional
     public void deleteReservation(Long id) {
         Reservation reservation = getReservationById(id);
         reservationRepository.delete(reservation);
