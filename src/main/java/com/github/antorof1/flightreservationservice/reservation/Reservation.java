@@ -5,6 +5,7 @@ import com.github.antorof1.flightreservationservice.user.User;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "reservations")
@@ -26,6 +27,9 @@ public class Reservation {
     private ReservationStatus status;
 
     @Column(nullable = false)
+    private UUID lockToken;
+
+    @Column(nullable = false)
     private OffsetDateTime createdAt;
 
     @Column(nullable = false)
@@ -34,10 +38,11 @@ public class Reservation {
     public Reservation() {
     }
 
-    public Reservation(User user, Seat seat, ReservationStatus status, OffsetDateTime createdAt, OffsetDateTime expiresAt) {
+    public Reservation(User user, Seat seat, ReservationStatus status, UUID lockToken, OffsetDateTime createdAt, OffsetDateTime expiresAt) {
         this.user = user;
         this.seat = seat;
         this.status = status;
+        this.lockToken = lockToken;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
     }
@@ -72,6 +77,14 @@ public class Reservation {
 
     public void setStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public UUID getLockToken() {
+        return lockToken;
+    }
+
+    public void setLockToken(UUID lockToken) {
+        this.lockToken = lockToken;
     }
 
     public OffsetDateTime getCreatedAt() {

@@ -29,6 +29,7 @@ CREATE TABLE reservations (
     user_id BIGINT NOT NULL,
     seat_id BIGINT NOT NULL,
     status VARCHAR(20) NOT NULL,
+    lock_token UUID NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     CONSTRAINT fk_reservations_user FOREIGN KEY (user_id) REFERENCES users(id),
