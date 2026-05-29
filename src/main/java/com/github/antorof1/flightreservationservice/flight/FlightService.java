@@ -46,6 +46,10 @@ public class FlightService {
             .orElseThrow(() -> new ResourceNotFoundException("Flight not found with id: " + id));
     }
 
+    public boolean existsById(Long id) {
+        return flightRepository.existsById(id);
+    }
+
     @Transactional
     public Flight updateFlight(Long id, Flight flightDetails) {
         Flight flight = getFlightById(id);

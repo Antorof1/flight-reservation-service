@@ -1,6 +1,7 @@
 package com.github.antorof1.flightreservationservice.seat;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
+import com.github.antorof1.flightreservationservice.flight.FlightService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,9 +12,11 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class SeatService {
     private final SeatRepository seatRepository;
+    private final FlightService flightService;
 
-    public SeatService(SeatRepository seatRepository) {
+    public SeatService(SeatRepository seatRepository, FlightService flightService) {
         this.seatRepository = seatRepository;
+        this.flightService = flightService;
     }
 
     @Transactional
@@ -32,6 +35,10 @@ public class SeatService {
     }
 
     public List<Seat> getSeatsByFlightId(Long flightId, @Nullable SeatStatus status) {
+        if (!flightService.existsById(flightId)) {
+            throw new ResourceNotFoundException("Flight not found");
+        }
+
         if (status != null) {
             return seatRepository.findByFlightIdAndStatus(flightId, status);
         }
