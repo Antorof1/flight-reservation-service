@@ -2,6 +2,8 @@ package com.github.antorof1.flightreservationservice.reservation;
 
 import com.github.antorof1.flightreservationservice.exception.InvalidReservationStateException;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
+import com.github.antorof1.flightreservationservice.exception.SeatAlreadyHeldException;
+import com.github.antorof1.flightreservationservice.exception.SeatUnavailableException;
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
@@ -45,14 +47,14 @@ public class ReservationService {
             .setIfAbsent(seatLockKey, lockToken.toString(), HOLD_MINUTES, TimeUnit.MINUTES);
 
         if (Boolean.FALSE.equals(isLocked)) {
-            throw new RuntimeException("Seat is currently held by another user"); // TODO: Use custom exception
+            throw new SeatAlreadyHeldException("Seat is currently held by another user");
         }
 
         try {
             Seat seat = seatService.getSeatById(seatId);
 
             if (seat.getStatus() != SeatStatus.AVAILABLE) {
-                throw new RuntimeException("Requested seat is no longer available"); // TODO: Use custom exception
+                throw new SeatUnavailableException("Requested seat is no longer available");
             }
 
             seatService.updateSeatStatus(seatId, SeatStatus.HELD);
