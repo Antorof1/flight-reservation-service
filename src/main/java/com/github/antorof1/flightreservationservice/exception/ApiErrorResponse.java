@@ -18,7 +18,4 @@ public record ApiErrorResponse(
     public ApiErrorResponse(int status, String error, String message, String path, List<String> details) {
         this(OffsetDateTime.now(), status, error, message, path, details);
     }
-
-    public ApiErrorResponse {
-    }
 }
