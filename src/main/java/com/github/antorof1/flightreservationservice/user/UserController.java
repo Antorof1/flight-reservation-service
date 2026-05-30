@@ -5,6 +5,10 @@ import com.github.antorof1.flightreservationservice.reservation.ReservationServi
 import com.github.antorof1.flightreservationservice.reservation.dto.ReservationResponse;
 import com.github.antorof1.flightreservationservice.user.dto.CreateUserRequest;
 import com.github.antorof1.flightreservationservice.user.dto.UserResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -18,6 +22,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 @Validated
+@Tag(name = "User", description = "The User API")
 public class UserController {
     private final UserService userService;
     private final ReservationService reservationService;
@@ -28,7 +33,12 @@ public class UserController {
     }
 
     @GetMapping
+    @Operation(summary = "Get user by email", description = "Retrieves a user by their email address.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved user")
+    @ApiResponse(responseCode = "400", description = "Invalid email format")
+    @ApiResponse(responseCode = "404", description = "User not found")
     public ResponseEntity<UserResponse> getUserByEmail(
+        @Parameter(description = "Email address of the user")
         @RequestParam
         @NotBlank(message = "Email is required")
         @Email(message = "Invalid email format")
@@ -40,6 +50,9 @@ public class UserController {
     }
 
     @PostMapping
+    @Operation(summary = "Create a new user", description = "Creates a new user with the provided details.")
+    @ApiResponse(responseCode = "201", description = "User successfully created")
+    @ApiResponse(responseCode = "400", description = "Invalid input or email already exists")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = request.toEntity();
         User savedUser = userService.createUser(user);
@@ -50,6 +63,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get user by ID", description = "Retrieves a user by their ID.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved user")
+    @ApiResponse(responseCode = "404", description = "User not found")
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         User user = userService.getUserById(id);
 
@@ -59,6 +75,9 @@ public class UserController {
     }
 
     @GetMapping("/{id}/reservations")
+    @Operation(summary = "Get user reservations", description = "Retrieves all reservations for a specific user.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved user reservations")
+    @ApiResponse(responseCode = "404", description = "User not found")
     public ResponseEntity<List<ReservationResponse>> getReservationsByUserId(@PathVariable Long id) {
         User user = userService.getUserById(id);
         List<Reservation> reservations = reservationService.getAllReservationsByUser(user);
