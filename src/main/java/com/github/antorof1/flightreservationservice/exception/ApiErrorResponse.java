@@ -12,11 +12,11 @@ public record ApiErrorResponse(
     List<String> details
 ) {
     public ApiErrorResponse(int status, String error, String message, String path) {
-        this(null, status, error, message, path, List.of());
+        this(OffsetDateTime.now(), status, error, message, path, List.of());
     }
 
     public ApiErrorResponse(int status, String error, String message, String path, List<String> details) {
-        this(null, status, error, message, path, details);
+        this(OffsetDateTime.now(), status, error, message, path, details);
     }
 
     public ApiErrorResponse {
