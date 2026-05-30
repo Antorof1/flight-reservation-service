@@ -1,12 +1,14 @@
 package com.github.antorof1.flightreservationservice.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestControllerAdvice
@@ -63,13 +65,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
+    public ResponseEntity<ApiErrorResponse> handleValidationException(Exception ex,
                                                                       HttpServletRequest request) {
-        List<String> details =
-            ex.getBindingResult().getFieldErrors().stream()
+        List<String> details = Collections.emptyList();
+
+        if (ex instanceof MethodArgumentNotValidException validationEx) {
+            details = validationEx.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .toList();
+        } else if (ex instanceof ConstraintViolationException constraintEx) {
+            details = constraintEx.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .toList();
+        }
 
         ApiErrorResponse response = new ApiErrorResponse(
             HttpStatus.BAD_REQUEST.value(),
