@@ -50,31 +50,6 @@ public class FlightService {
         return flightRepository.existsById(id);
     }
 
-    @Transactional
-    public Flight updateFlight(Long id, Flight flightDetails) {
-        Flight flight = getFlightById(id);
-
-        if (!flight.getFlightNumber()
-            .equals(flightDetails.getFlightNumber()) &&
-            flightRepository.existsByFlightNumber(flightDetails.getFlightNumber())) {
-            throw new IllegalArgumentException("Flight number is already in use: " + flightDetails.getFlightNumber());
-        }
-
-        flight.setFlightNumber(flightDetails.getFlightNumber());
-        flight.setDepartureAirport(flightDetails.getDepartureAirport());
-        flight.setArrivalAirport(flightDetails.getArrivalAirport());
-        flight.setDepartureTime(flightDetails.getDepartureTime());
-        flight.setArrivalTime(flightDetails.getArrivalTime());
-
-        return flightRepository.save(flight);
-    }
-
-    @Transactional
-    public void deleteFlight(Long id) {
-        Flight flight = getFlightById(id);
-        flightRepository.delete(flight);
-    }
-
     private List<Seat> generateSeats(Flight flight) {
         List<Seat> seats = new ArrayList<>();
 

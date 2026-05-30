@@ -19,21 +19,6 @@ public class SeatService {
         this.flightService = flightService;
     }
 
-    @Transactional
-    public Seat addSeat(Seat seat) {
-        if (seatRepository.existsByFlightAndSeatNumber(seat.getFlight(), seat.getSeatNumber())) {
-            throw new IllegalArgumentException(
-                "Flight and seat number combination is already in use: " + seat.getFlight().getId() + " " +
-                    seat.getSeatNumber());
-        }
-
-        return seatRepository.save(seat);
-    }
-
-    public List<Seat> getAllSeats() {
-        return seatRepository.findAll();
-    }
-
     public List<Seat> getSeatsByFlightId(Long flightId, @Nullable SeatStatus status) {
         if (!flightService.existsById(flightId)) {
             throw new ResourceNotFoundException("Flight not found");
@@ -52,40 +37,11 @@ public class SeatService {
     }
 
     @Transactional
-    public Seat updateSeat(Long id, Seat seatDetails) {
-        Seat seat = getSeatById(id);
-
-        boolean flightChanged = !seat.getFlight().equals(seatDetails.getFlight());
-        boolean seatNumberChanged = !seat.getSeatNumber().equals(seatDetails.getSeatNumber());
-
-        if ((flightChanged || seatNumberChanged) &&
-            seatRepository.existsByFlightAndSeatNumber(seatDetails.getFlight(), seatDetails.getSeatNumber())) {
-            throw new IllegalArgumentException(
-                "Flight and seat number combination is already in use: " + seatDetails.getFlight().getId() + " " +
-                    seatDetails.getSeatNumber());
-        }
-
-        seat.setFlight(seatDetails.getFlight());
-        seat.setSeatNumber(seatDetails.getSeatNumber());
-        seat.setSeatClass(seatDetails.getSeatClass());
-        seat.setPrice(seatDetails.getPrice());
-        seat.setStatus(seatDetails.getStatus());
-
-        return seatRepository.save(seat);
-    }
-
-    @Transactional
     public Seat updateSeatStatus(Long id, SeatStatus status) {
         Seat seat = getSeatById(id);
 
         seat.setStatus(status);
 
         return seatRepository.save(seat);
-    }
-
-    @Transactional
-    public void deleteSeat(Long id) {
-        Seat seat = getSeatById(id);
-        seatRepository.delete(seat);
     }
 }

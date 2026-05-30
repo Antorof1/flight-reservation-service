@@ -75,10 +75,6 @@ public class ReservationService {
         }
     }
 
-    public List<Reservation> getAllReservations() {
-        return reservationRepository.findAll();
-    }
-
     public List<Reservation> getAllReservationsByUser(User user) {
         return reservationRepository.findAllByUser(user);
     }
@@ -86,19 +82,6 @@ public class ReservationService {
     public Reservation getReservationById(Long id) {
         return reservationRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reservation not found with id: " + id));
-    }
-
-    @Transactional
-    public Reservation updateReservation(Long id, Reservation reservationDetails) {
-        Reservation reservation = getReservationById(id);
-
-        reservation.setUser(reservationDetails.getUser());
-        reservation.setSeat(reservationDetails.getSeat());
-        reservation.setStatus(reservationDetails.getStatus());
-        reservation.setCreatedAt(reservationDetails.getCreatedAt());
-        reservation.setExpiresAt(reservationDetails.getExpiresAt());
-
-        return reservationRepository.save(reservation);
     }
 
     @Transactional
@@ -175,11 +158,5 @@ public class ReservationService {
         }
 
         reservationRepository.save(reservation);
-    }
-
-    @Transactional
-    public void deleteReservation(Long id) {
-        Reservation reservation = getReservationById(id);
-        reservationRepository.delete(reservation);
     }
 }
