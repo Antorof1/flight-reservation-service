@@ -9,20 +9,18 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-
     @Bean
     public OpenAPI flightReservationOpenAPI() {
         return new OpenAPI()
-                .info(new Info()
-                        .title("Flight Reservation Service API")
-                        .description("API for managing flights, seats, users, and reservations.")
-                        .version("v1.0.0")
-                        .contact(new Contact()
-                                .name("API Support")
-                                .url("https://github.com/antorof1/flight-reservation-service")
-                                .email("support@example.com"))
-                        .license(new License()
-                                .name("Apache 2.0")
-                                .url("http://springdoc.org")));
+            .info(new Info()
+                .title("Flight Reservation Service API")
+                .description("API for managing flights, seats, users, and reservations.")
+                .version("v1.0.0")
+                .contact(new Contact()
+                    .name("API Support")
+                    .url("https://github.com/antorof1/flight-reservation-service"))
+                .license(new License()
+                    .name("Apache 2.0")
+                    .url("https://www.apache.org/licenses/LICENSE-2.0")));
     }
 }
