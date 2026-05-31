@@ -28,6 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ReservationController.class)
 class ReservationControllerTest {
+    private static final OffsetDateTime CREATED_AT = OffsetDateTime.parse("2026-01-01T10:00:00Z");
+    private static final OffsetDateTime EXPIRES_AT = OffsetDateTime.parse("2026-01-01T10:10:00Z");
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -46,26 +49,44 @@ class ReservationControllerTest {
         user = new User("john.doe@example.com", "John Doe");
         user.setId(1L);
 
-        Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5));
+        Flight flight = new Flight(
+            "FL123",
+            "JFK",
+            "LAX",
+            OffsetDateTime.now(),
+            OffsetDateTime.now().plusHours(5)
+        );
         flight.setId(1L);
 
-        seat = new Seat(flight, "12A", SeatClass.ECONOMY, new BigDecimal("100.00"), SeatStatus.HELD);
+        seat = new Seat(
+            flight,
+            "12A",
+            SeatClass.ECONOMY,
+            new BigDecimal("100.00"),
+            SeatStatus.HELD
+        );
         seat.setId(1L);
 
-        reservation = new Reservation(user, seat, ReservationStatus.PENDING, UUID.randomUUID(), OffsetDateTime.now(), OffsetDateTime.now()
-            .plusMinutes(15));
+        reservation = new Reservation(
+            user,
+            seat,
+            ReservationStatus.PENDING,
+            UUID.randomUUID(),
+            CREATED_AT,
+            EXPIRES_AT
+        );
         reservation.setId(1L);
     }
 
     @Test
     @DisplayName("GET /api/v1/reservations/{id} should return a reservation when it exists")
     void shouldReturnReservationById() throws Exception {
-        when(reservationService.getReservationById(1L)).thenReturn(reservation);
+        when(reservationService.getReservationById(reservation.getId())).thenReturn(reservation);
 
-        mockMvc.perform(get("/api/v1/reservations/1"))
+        mockMvc.perform(get("/api/v1/reservations/" + reservation.getId()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.userId").value(1))
+            .andExpect(jsonPath("$.id").value(reservation.getId()))
+            .andExpect(jsonPath("$.userId").value(user.getId()))
             .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
@@ -82,15 +103,15 @@ class ReservationControllerTest {
     @Test
     @DisplayName("POST /api/v1/reservations should create a new reservation")
     void shouldCreateReservation() throws Exception {
-        CreateReservationRequest request = new CreateReservationRequest(1L, 1L);
+        CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
 
-        when(reservationService.createReservation(1L, 1L)).thenReturn(reservation);
+        when(reservationService.createReservation(user.getId(), seat.getId())).thenReturn(reservation);
 
         mockMvc.perform(post("/api/v1/reservations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.id").value(reservation.getId()))
             .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
@@ -98,9 +119,9 @@ class ReservationControllerTest {
     @DisplayName("PUT /api/v1/reservations/{id}/confirm should confirm reservation")
     void shouldConfirmReservation() throws Exception {
         reservation.setStatus(ReservationStatus.CONFIRMED);
-        when(reservationService.confirmReservation(1L)).thenReturn(reservation);
+        when(reservationService.confirmReservation(reservation.getId())).thenReturn(reservation);
 
-        mockMvc.perform(put("/api/v1/reservations/1/confirm"))
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/confirm"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
@@ -109,9 +130,9 @@ class ReservationControllerTest {
     @DisplayName("PUT /api/v1/reservations/{id}/cancel should cancel reservation")
     void shouldCancelReservation() throws Exception {
         reservation.setStatus(ReservationStatus.CANCELLED);
-        when(reservationService.cancelReservation(1L)).thenReturn(reservation);
+        when(reservationService.cancelReservation(reservation.getId())).thenReturn(reservation);
 
-        mockMvc.perform(put("/api/v1/reservations/1/cancel"))
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/cancel"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
