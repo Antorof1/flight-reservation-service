@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: flight-reservation-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  valkey:
+    image: valkey/valkey:9.1-alpine
+    container_name: flight-reservation-valkey
+    restart: always
+    command: valkey-server --requirepass ${VALKEY_PASSWORD}
+    volumes:
+      - valkey_data:/data
+    healthcheck:
+      test: [ "CMD", "valkey-cli", "-a", "${VALKEY_PASSWORD}", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flight-reservation-app
+    restart: always
+    ports:
+      - "${APP_PORT}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: valkey
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ${VALKEY_PASSWORD}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      db:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  valkey_data:
