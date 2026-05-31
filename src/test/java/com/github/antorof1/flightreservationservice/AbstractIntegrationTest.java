@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice;
 
+import com.github.antorof1.flightreservationservice.factory.FlightTestDataFactory;
 import com.github.antorof1.flightreservationservice.flight.FlightRepository;
 import com.github.antorof1.flightreservationservice.reservation.ReservationRepository;
 import com.github.antorof1.flightreservationservice.seat.SeatRepository;
@@ -17,6 +18,9 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 public abstract class AbstractIntegrationTest {
     @Autowired
     protected WebTestClient testClient;
+
+    @Autowired
+    protected FlightTestDataFactory flightFactory;
 
     @Autowired
     protected UserRepository userRepository;
