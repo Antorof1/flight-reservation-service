@@ -13,10 +13,8 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,24 +29,6 @@ class SeatControllerTest {
 
     @MockitoBean
     private SeatService seatService;
-
-    @Test
-    @DisplayName("GET /api/v1/seats should return seats for a flight")
-    void shouldReturnSeatsByFlightId() throws Exception {
-        Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5));
-        flight.setId(1L);
-
-        Seat seat = new Seat(flight, "12A", SeatClass.ECONOMY, new BigDecimal("100.00"), SeatStatus.AVAILABLE);
-        seat.setId(1L);
-
-        when(seatService.getSeatsByFlightId(1L, null)).thenReturn(List.of(seat));
-
-        mockMvc.perform(get("/api/v1/seats")
-                .param("flightId", "1"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].seatNumber").value("12A"));
-    }
 
     @Test
     @DisplayName("PATCH /api/v1/seats/{id}/status should update seat status")

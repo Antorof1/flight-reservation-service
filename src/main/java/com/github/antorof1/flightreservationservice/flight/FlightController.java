@@ -2,10 +2,16 @@ package com.github.antorof1.flightreservationservice.flight;
 
 import com.github.antorof1.flightreservationservice.flight.dto.CreateFlightRequest;
 import com.github.antorof1.flightreservationservice.flight.dto.FlightResponse;
+import com.github.antorof1.flightreservationservice.seat.Seat;
+import com.github.antorof1.flightreservationservice.seat.SeatService;
+import com.github.antorof1.flightreservationservice.seat.SeatStatus;
+import com.github.antorof1.flightreservationservice.seat.dto.SeatResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,9 +23,11 @@ import java.util.List;
 @Tag(name = "Flight", description = "The Flight API")
 public class FlightController {
     private final FlightService flightService;
+    private final SeatService seatService;
 
-    public FlightController(FlightService flightService) {
+    public FlightController(FlightService flightService, SeatService seatService) {
         this.flightService = flightService;
+        this.seatService = seatService;
     }
 
     @GetMapping
@@ -43,6 +51,23 @@ public class FlightController {
         FlightResponse response = FlightResponse.fromEntity(flight);
 
         return ResponseEntity.ok(response);
+    }
+
+
+    @GetMapping("/{id}/seats")
+    @Operation(summary = "Get seats by flight ID",
+        description = "Retrieves a list of seats for a specific flight, optionally filtered by status.")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved seats")
+    @ApiResponse(responseCode = "404", description = "Flight not found")
+    public ResponseEntity<List<SeatResponse>> getFlightSeats(
+        @PathVariable Long id,
+        @Parameter(description = "Optional seat status to filter by") @RequestParam(
+            required = false) @Nullable SeatStatus status) {
+        List<Seat> seats = seatService.getSeatsByFlightId(id, status);
+
+        List<SeatResponse> seatsResponse = seats.stream().map(SeatResponse::fromEntity).toList();
+
+        return ResponseEntity.ok(seatsResponse);
     }
 
     @PostMapping

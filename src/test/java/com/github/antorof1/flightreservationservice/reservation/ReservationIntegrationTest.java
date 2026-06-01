@@ -54,9 +54,9 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
 
         List<SeatResponse> seatResponses = testClient.get()
             .uri(uriBuilder ->
-                uriBuilder.path("/api/v1/seats")
-                    .queryParam("flightId", flight.getId())
-                    .queryParam("status", "AVAILABLE").build()
+                uriBuilder.path("/api/v1/flights/{id}/seats")
+                    .queryParam("status", "AVAILABLE")
+                    .build(flight.getId())
             )
             .exchange()
             .expectStatus().isOk()

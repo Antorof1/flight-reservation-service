@@ -2,6 +2,10 @@ package com.github.antorof1.flightreservationservice.flight;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.flight.dto.CreateFlightRequest;
+import com.github.antorof1.flightreservationservice.seat.Seat;
+import com.github.antorof1.flightreservationservice.seat.SeatClass;
+import com.github.antorof1.flightreservationservice.seat.SeatService;
+import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.ObjectMapper;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -31,6 +36,9 @@ class FlightControllerTest {
 
     @MockitoBean
     private FlightService flightService;
+
+    @MockitoBean
+    private SeatService seatService;
 
     @Test
     @DisplayName("GET /api/v1/flights should return a list of flights")
@@ -68,6 +76,24 @@ class FlightControllerTest {
         mockMvc.perform(get("/api/v1/flights/99"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message").value("Flight not found"));
+    }
+
+
+    @Test
+    @DisplayName("GET /api/v1/flights/{id}/seats should return seats for a flight")
+    void shouldReturnSeatsByFlightId() throws Exception {
+        Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5));
+        flight.setId(1L);
+
+        Seat seat = new Seat(flight, "12A", SeatClass.ECONOMY, new BigDecimal("100.00"), SeatStatus.AVAILABLE);
+        seat.setId(1L);
+
+        when(seatService.getSeatsByFlightId(1L, null)).thenReturn(List.of(seat));
+
+        mockMvc.perform(get("/api/v1/flights/1/seats"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].seatNumber").value("12A"));
     }
 
     @Test
