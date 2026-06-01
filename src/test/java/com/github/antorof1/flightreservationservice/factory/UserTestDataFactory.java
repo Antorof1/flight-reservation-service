@@ -32,7 +32,7 @@ public class UserTestDataFactory {
             String email = String.format("test-%d@example.com", i);
             String name = String.format("Test User %d", i);
 
-            users.add(new User(email, name));
+            users.add(createUser(email, name));
         }
 
         return users;
