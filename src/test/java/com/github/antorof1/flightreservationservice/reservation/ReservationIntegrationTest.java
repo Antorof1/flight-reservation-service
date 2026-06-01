@@ -4,19 +4,32 @@ import com.github.antorof1.flightreservationservice.AbstractIntegrationTest;
 import com.github.antorof1.flightreservationservice.flight.Flight;
 import com.github.antorof1.flightreservationservice.reservation.dto.CreateReservationRequest;
 import com.github.antorof1.flightreservationservice.reservation.dto.ReservationResponse;
+import com.github.antorof1.flightreservationservice.seat.Seat;
+import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.seat.dto.SeatResponse;
+import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.dto.CreateUserRequest;
 import com.github.antorof1.flightreservationservice.user.dto.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
 
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ReservationIntegrationTest extends AbstractIntegrationTest {
+    @Autowired
+    private SeatService seatService;
+
     @Test
     @DisplayName("Should successfully complete a booking workflow: create user, reserve seat and confirm")
     void shouldCompleteBookingWorkflow() {
@@ -84,5 +97,51 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
         assertThat(confirmResponse).isNotNull();
         assertThat(confirmResponse.status()).isEqualTo(ReservationStatus.CONFIRMED);
         assertThat(confirmResponse.seat().status()).isEqualTo(SeatStatus.BOOKED);
+    }
+
+    @Test
+    @DisplayName("Should allow only one reservation and reject others when multiple users attempt to reserve the same" +
+        " seat simultaneously")
+    void shouldAllowOnlyOneReservationWhenMultipleUsersReserveSameSeatConcurrently() {
+        final int REQUEST_COUNT = 50;
+
+        Flight flight = flightFactory.createFlight("FL-123");
+        List<User> users = userFactory.createUsers(REQUEST_COUNT);
+        Seat seat = seatService.getSeatsByFlightId(flight.getId(), SeatStatus.AVAILABLE).getFirst();
+
+        Queue<HttpStatusCode> responseStatuses = new ConcurrentLinkedQueue<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (User user : users) {
+                CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
+
+                executor.submit(() -> {
+                    try {
+                        latch.await();
+
+                        testClient.post()
+                            .uri("/api/v1/reservations")
+                            .bodyValue(request)
+                            .exchange()
+                            .expectBody()
+                            .consumeWith(result -> {
+                                responseStatuses.add(result.getStatus());
+                            });
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+            }
+
+            latch.countDown();
+        }
+
+        long successCount = responseStatuses.stream().filter(HttpStatusCode::is2xxSuccessful).count();
+        long failureCount = responseStatuses.stream().filter(HttpStatusCode::isError).count();
+
+        assertThat(responseStatuses).hasSize(REQUEST_COUNT);
+        assertThat(successCount).isEqualTo(1);
+        assertThat(failureCount).isEqualTo(REQUEST_COUNT - 1);
     }
 }
