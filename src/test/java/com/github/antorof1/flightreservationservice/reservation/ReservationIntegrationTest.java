@@ -144,4 +144,67 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
         assertThat(successCount).isEqualTo(1);
         assertThat(failureCount).isEqualTo(REQUEST_COUNT - 1);
     }
+
+    @Test
+    @DisplayName("Should prevent double-booking and maintain correct inventory status when multiple users reserve " +
+        "different seats simultaneously")
+    void shouldMaintainInventoryIntegrityWhenMultipleUsersReserveDifferentSeatsConcurrently() {
+        Flight flight = flightFactory.createFlight("FL-123");
+        List<Seat> seats = seatService.getSeatsByFlightId(flight.getId(), SeatStatus.AVAILABLE);
+
+        int requestCount = seats.size();
+
+        List<User> users = userFactory.createUsers(requestCount);
+
+        Queue<HttpStatusCode> responseStatuses = new ConcurrentLinkedQueue<>();
+        Queue<ReservationResponse> successfulReservations = new ConcurrentLinkedQueue<>();
+        CountDownLatch latch = new CountDownLatch(1);
+
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            for (int i = 0; i < requestCount; i++) {
+                Seat seat = seats.get(i);
+                User user = users.get(i);
+
+                CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
+
+                executor.submit(() -> {
+                    try {
+                        latch.await();
+
+                        testClient.post()
+                            .uri("/api/v1/reservations")
+                            .bodyValue(request)
+                            .exchange()
+                            .expectBody(ReservationResponse.class)
+                            .consumeWith(result -> {
+                                responseStatuses.add(result.getStatus());
+
+                                if (result.getStatus().is2xxSuccessful() && result.getResponseBody() != null) {
+                                    successfulReservations.add(result.getResponseBody());
+                                }
+                            });
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+            }
+
+            latch.countDown();
+        }
+
+        long successCount = responseStatuses.stream().filter(HttpStatusCode::is2xxSuccessful).count();
+
+        assertThat(responseStatuses).hasSize(requestCount);
+        assertThat(successCount).isEqualTo(requestCount);
+        assertThat(successfulReservations).hasSize(requestCount);
+
+        for (ReservationResponse response : successfulReservations) {
+            assertThat(response.status()).isEqualTo(ReservationStatus.PENDING);
+            assertThat(response.seat().status()).isEqualTo(SeatStatus.HELD);
+        }
+
+        List<Seat> remainingSeats = seatService.getSeatsByFlightId(flight.getId(), SeatStatus.AVAILABLE);
+
+        assertThat(remainingSeats).isEmpty();
+    }
 }
