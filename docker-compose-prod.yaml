@@ -28,10 +28,8 @@ services:
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  appapp:
+    image: ghcr.io/antorof1/flight-reservation-service:${APP_IMAGE_TAG:-latest}
     container_name: flight-reservation-app
     restart: always
     ports:
