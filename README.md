@@ -15,7 +15,10 @@ locking and automated cleanup of expired reservations.
     - **Cancellation:** Release seats back to availability.
     - **Automated Cleanup:** Scheduled background task (Sweeper) to release expired holds.
 - **Error Handling:** Structured global exception handling with consistent error responses.
-- **Production Ready:** Optimized Docker configuration for production environments and environment variable management.
+- **Continuous Integration & Delivery:** Automated testing and containerization pipeline using GitHub Actions,
+  publishing production-ready images to GitHub Container Registry.
+- **Production Ready:** Optimized Docker configuration for production environments, pre-built images, and environment
+  variable management.
 - **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
 - **API Documentation:** Interactive Swagger/OpenAPI UI.
 
@@ -30,6 +33,7 @@ locking and automated cleanup of expired reservations.
 - **Build Tool:** Maven
 - **Infrastructure:** Docker & Docker Compose (Dev & Prod)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WebTestClient
+- **CI/CD:** GitHub Actions & GitHub Container Registry
 
 ## Prerequisites
 
@@ -46,21 +50,48 @@ git clone https://github.com/antorof1/flight-reservation-service.git
 cd flight-reservation-service
 ```
 
-### 2. Start Infrastructure
-
-The application is configured to use Spring Boot Docker Compose support, but you can also start the services manually:
-
-```bash
-docker compose up -d
-```
-
-### 3. Run the Application
+### 2. Run the Application
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
 The application will be available at `http://localhost:8080`.
+
+## Production Deployment
+
+For production-like environments, a dedicated Docker configuration is provided.
+
+### 1. Environment Configuration
+
+Copy the template environment file and update the values for your production needs:
+
+```bash
+cp .env.example .env
+```
+
+The application relies on the following key environment variables:
+
+| Variable                 | Description                               | Default / Example Value |
+|:-------------------------|:------------------------------------------|:------------------------|
+| `POSTGRES_USER`          | PostgreSQL administrative username        | `db_user`               |
+| `POSTGRES_PASSWORD`      | PostgreSQL administrative password        | `db_password`           |
+| `POSTGRES_DB`            | Name of the primary database              | `flight_reservation_db` |
+| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance    | `valkey_password`       |
+| `APP_PORT`               | Port exposed by the application container | `8080`                  |
+| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)             | `prod`                  |
+| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR        | `latest`                | 
+
+*Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
+
+### 2. Deploy with Docker Compose
+
+Use the production-specific compose file, which pulls the pre-built image from GHCR using the tag specified by
+`APP_IMAGE_TAG`:
+
+```bash
+docker compose -f docker-compose-prod.yaml --env-file .env up -d
+```
 
 ## API Documentation
 
@@ -118,38 +149,14 @@ Run the full test suite:
 ./mvnw test
 ```
 
-## Production Deployment
+## CI/CD Pipeline
 
-For production-like environments, a dedicated Docker configuration is provided.
+The project includes an automated GitHub Actions workflow (`.github/workflows/maven.yml`) to ensure code quality and
+build delivery:
 
-### 1. Environment Configuration
-
-Copy the template environment file and update the values for your production needs:
-
-```bash
-cp .env.example .env
-```
-
-The application relies on the following key environment variables:
-
-| Variable                 | Description                               | Default / Example Value |
-|:-------------------------|:------------------------------------------|:------------------------|
-| `POSTGRES_USER`          | PostgreSQL administrative username        | `db_user`               |
-| `POSTGRES_PASSWORD`      | PostgreSQL administrative password        | `db_password`           |
-| `POSTGRES_DB`            | Name of the primary database              | `flight_reservation_db` |
-| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance    | `valkey_password`       |
-| `APP_PORT`               | Port exposed by the application container | `8080`                  |
-| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)             | `prod`                  |
-
-*Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
-
-### 2. Deploy with Docker Compose
-
-Use the production-specific compose file:
-
-```bash
-docker compose -f docker-compose-prod.yaml --env-file .env up -d
-```
+- **Verification:** Runs the Maven test suite on every pull request and push to the `main` branch.
+- **Delivery:** Upon a successful merge/push to `main`, a multi-architecture Docker image is built using Docker Buildx,
+  tagged (using commit SHA, branch reference, and `latest`), and pushed to the **GitHub Container Registry**.
 
 ## Architecture
 
