@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/Antorof1/flight-reservation-service/actions/workflows/maven.yml/badge.svg)](https://github.com/Antorof1/flight-reservation-service/actions)
 [![Java Version](https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.0.6-brightgreen?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 A robust, modern backend service for managing flight reservations, built with Spring Boot 4 and Java 21. This service
 provides a comprehensive API for handling flights, seats, users and the reservation lifecycle, including temporary seat
