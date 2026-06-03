@@ -28,6 +28,31 @@ locking and automated cleanup of expired reservations.
 - **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
 - **API Documentation:** Interactive Swagger/OpenAPI UI.
 
+## Live Demo
+
+The application is fully deployed and accessible for live testing.
+
+* **URL:** [https://flight.antonbazykin.com](https://flight.antonbazykin.com)
+
+#### Infrastructure Stack
+
+- **Cloud Provider:** Hosted on an **Oracle Cloud VPS** (ARM64).
+- **Edge Network:**
+    - **Cloudflare Proxy:** The application sits behind the Cloudflare proxy, masking the origin IP and providing a
+      layer of protection against DDoS attacks.
+    - **TLS:** End-to-end encryption managed via Cloudflare and Caddy.
+- **Reverse Proxy:** **Caddy** handles internal routing and serves as the entry point for the Docker network.
+- **Containerization:** Fully containerized using **Docker Compose**, pulling images directly from the GitHub Container
+  Registry (GHCR).
+
+#### Automated Maintenance
+
+To ensure the demo remains performant and accessible to everyone, the environment includes:
+
+- **Daily State Reset:** A scheduled cron job runs once every 24 hours to clear the PostgreSQL and Valkey databases,
+  ensuring a "fresh" state for new visitors.
+- **Automated Health Checks:** The service is automatically restarted during maintenance to verify deployment integrity.
+
 ## Tech Stack
 
 - **Language:** Java 21
