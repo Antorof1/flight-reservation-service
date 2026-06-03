@@ -59,8 +59,11 @@ services:
       - "443:443/udp"
     environment:
       DOMAIN: ${DOMAIN}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/conf.d:/etc/caddy/conf.d:ro
+      - ./caddy/certs:/etc/caddy/certs:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

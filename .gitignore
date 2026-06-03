@@ -33,3 +33,7 @@ build/
 .vscode/
 
 .env
+
+caddy/certs/*.pem
+caddy/certs/*.key
+caddy/conf.d/*.caddy
