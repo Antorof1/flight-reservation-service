@@ -79,15 +79,16 @@ cp .env.example .env
 
 The application relies on the following key environment variables:
 
-| Variable                 | Description                            | Default / Example Value |
-|:-------------------------|:---------------------------------------|:------------------------|
-| `POSTGRES_USER`          | PostgreSQL administrative username     | `db_user`               |
-| `POSTGRES_PASSWORD`      | PostgreSQL administrative password     | `db_password`           |
-| `POSTGRES_DB`            | Name of the primary database           | `flight_reservation_db` |
-| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance | `valkey_password`       |
-| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)          | `prod`                  |
-| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR     | `latest`                | 
-| `DOMAIN`                 | Domain name configured in Caddy        | `localhost`             |
+| Variable                 | Description                                      | Default / Example Value |
+|:-------------------------|:-------------------------------------------------|:------------------------|
+| `POSTGRES_USER`          | PostgreSQL administrative username               | `db_user`               |
+| `POSTGRES_PASSWORD`      | PostgreSQL administrative password               | `db_password`           |
+| `POSTGRES_DB`            | Name of the primary database                     | `flight_reservation_db` |
+| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance           | `valkey_password`       |
+| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)                    | `prod`                  |
+| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR               | `latest`                | 
+| `DOMAIN`                 | Domain name configured in Caddy                  | `localhost`             |
+| `TRUSTED_PROXIES`        | Space-separated list of trusted proxy IPs (CIDR) | `127.0.0.1/32`          |
 
 *Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
 
@@ -99,6 +100,15 @@ Use the production-specific compose file, which pulls the pre-built image from G
 ```bash
 docker compose -f docker-compose-prod.yaml --env-file .env up -d
 ```
+
+### 3. Modular Caddy Configuration
+
+The reverse proxy is configured for modularity and security:
+
+- **`./caddy/conf.d/`**: Add custom `.caddy` snippets here to extend functionality.
+- **`./caddy/certs/`**: Store custom SSL certificates here.
+- **Trusted Proxies**: Use the `TRUSTED_PROXIES` variable to define upstream proxy ranges (e.g., Cloudflare IPs) for
+  accurate header processing.
 
 ## API Documentation
 
