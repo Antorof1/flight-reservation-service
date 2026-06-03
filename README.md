@@ -22,7 +22,8 @@ locking and automated cleanup of expired reservations.
 - **Error Handling:** Structured global exception handling with consistent error responses.
 - **Continuous Integration & Delivery:** Automated testing and containerization pipeline using GitHub Actions,
   publishing production-ready images to GitHub Container Registry.
-- **Production Ready:** Optimized Docker configuration for production environments, pre-built images, and environment
+- **Production Ready:** Optimized Docker configuration featuring a Caddy reverse proxy, pre-built images, and
+  environment
   variable management.
 - **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
 - **API Documentation:** Interactive Swagger/OpenAPI UI.
@@ -39,6 +40,7 @@ locking and automated cleanup of expired reservations.
 - **Infrastructure:** Docker & Docker Compose (Dev & Prod)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WebTestClient
 - **CI/CD:** GitHub Actions & GitHub Container Registry
+- **Reverse Proxy:** Caddy
 
 ## Prerequisites
 
@@ -77,15 +79,15 @@ cp .env.example .env
 
 The application relies on the following key environment variables:
 
-| Variable                 | Description                               | Default / Example Value |
-|:-------------------------|:------------------------------------------|:------------------------|
-| `POSTGRES_USER`          | PostgreSQL administrative username        | `db_user`               |
-| `POSTGRES_PASSWORD`      | PostgreSQL administrative password        | `db_password`           |
-| `POSTGRES_DB`            | Name of the primary database              | `flight_reservation_db` |
-| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance    | `valkey_password`       |
-| `APP_PORT`               | Port exposed by the application container | `8080`                  |
-| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)             | `prod`                  |
-| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR        | `latest`                | 
+| Variable                 | Description                            | Default / Example Value |
+|:-------------------------|:---------------------------------------|:------------------------|
+| `POSTGRES_USER`          | PostgreSQL administrative username     | `db_user`               |
+| `POSTGRES_PASSWORD`      | PostgreSQL administrative password     | `db_password`           |
+| `POSTGRES_DB`            | Name of the primary database           | `flight_reservation_db` |
+| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance | `valkey_password`       |
+| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)          | `prod`                  |
+| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR     | `latest`                | 
+| `DOMAIN`                 | Domain name configured in Caddy        | `localhost`             |
 
 *Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
 
