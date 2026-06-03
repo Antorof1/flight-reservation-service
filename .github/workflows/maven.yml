@@ -68,3 +68,25 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha, mode=max
+
+  deploy:
+    name: Deploy to VPS
+    needs: publish
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      uses: actions/checkout@v4
+    - name: Executing remote ssh commands
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          cd ${{ secrets.VPS_APP_PATH }}
+
+          docker compose -f docker-compose.yaml pull app
+          docker compose -f docker-compose.yaml up -d
+          
+          docker image prune -f
