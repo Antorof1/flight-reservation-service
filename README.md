@@ -20,7 +20,7 @@ locking and automated cleanup of expired reservations.
     - **Cancellation:** Release seats back to availability.
     - **Automated Cleanup:** Scheduled background task (Sweeper) to release expired holds.
 - **Error Handling:** Structured global exception handling with consistent error responses.
-- **Continuous Integration & Delivery:** Automated testing and containerization pipeline using GitHub Actions,
+- **Continuous Integration & Delivery:** Automated testing, containerization and deployment to VPS via GitHub Actions,
   publishing production-ready images to GitHub Container Registry.
 - **Production Ready:** Optimized Docker configuration featuring a Caddy reverse proxy, pre-built images, and
   environment
@@ -174,6 +174,8 @@ build delivery:
 - **Verification:** Runs the Maven test suite on every pull request and push to the `main` branch.
 - **Delivery:** Upon a successful merge/push to `main`, a multi-architecture Docker image is built using Docker Buildx,
   tagged (using commit SHA, branch reference, and `latest`), and pushed to the **GitHub Container Registry**.
+- **Deployment:** Automatically connects to the production VPS via SSH to pull the latest image and recreate the
+  containers for a zero-downtime-like update experience.
 
 ## Architecture
 
