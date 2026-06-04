@@ -9,30 +9,13 @@ A robust, modern backend service for managing flight reservations, built with Sp
 provides a comprehensive API for handling flights, seats, users and the reservation lifecycle, including temporary seat
 locking and automated cleanup of expired reservations.
 
-## Features
-
-- **Flight Management:** Create and retrieve flight details including schedules and airports.
-- **Seat Management:** Manage seat availability, pricing and classes (Economy, Business, First Class).
-- **User Management:** Register users and track their reservation history.
-- **Reservation Lifecycle:**
-    - **Temporary Hold:** Temporary seat reservation with Redis-backed locking to prevent overbooking.
-    - **Confirmation:** Finalize reservations after payment/processing.
-    - **Cancellation:** Release seats back to availability.
-    - **Automated Cleanup:** Scheduled background task (Sweeper) to release expired holds.
-- **Error Handling:** Structured global exception handling with consistent error responses.
-- **Continuous Integration & Delivery:** Automated testing, containerization and deployment to VPS via GitHub Actions,
-  publishing production-ready images to GitHub Container Registry.
-- **Production Ready:** Optimized Docker configuration featuring a Caddy reverse proxy, pre-built images, and
-  environment
-  variable management.
-- **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
-- **API Documentation:** Interactive Swagger/OpenAPI UI.
-
 ## Live Demo
 
-The application is fully deployed and accessible for live testing.
+The application is deployed as a headless API service. You can interact with the live endpoints directly via the Swagger UI.
 
-* **URL:** [https://flight.antonbazykin.com](https://flight.antonbazykin.com)
+* **API Base URL:** [https://flight.antonbazykin.com](https://flight.antonbazykin.com)
+* **Interactive Swagger UI:** [https://flight.antonbazykin.com/swagger-ui.html](https://flight.antonbazykin.com/swagger-ui.html)
+* **OpenAPI Specification:** [https://flight.antonbazykin.com/v3/api-docs](https://flight.antonbazykin.com/v3/api-docs)
 
 #### Infrastructure Stack
 
@@ -52,6 +35,25 @@ To ensure the demo remains performant and accessible to everyone, the environmen
 - **Daily State Reset:** A scheduled cron job runs once every 24 hours to clear the PostgreSQL and Valkey databases,
   ensuring a "fresh" state for new visitors.
 - **Automated Health Checks:** The service is automatically restarted during maintenance to verify deployment integrity.
+
+## Features
+
+- **Flight Management:** Create and retrieve flight details including schedules and airports.
+- **Seat Management:** Manage seat availability, pricing and classes (Economy, Business, First Class).
+- **User Management:** Register users and track their reservation history.
+- **Reservation Lifecycle:**
+    - **Temporary Hold:** Temporary seat reservation with Redis-backed locking to prevent overbooking.
+    - **Confirmation:** Finalize reservations after payment/processing.
+    - **Cancellation:** Release seats back to availability.
+    - **Automated Cleanup:** Scheduled background task (Sweeper) to release expired holds.
+- **Error Handling:** Structured global exception handling with consistent error responses.
+- **Continuous Integration & Delivery:** Automated testing, containerization and deployment to VPS via GitHub Actions,
+  publishing production-ready images to GitHub Container Registry.
+- **Production Ready:** Optimized Docker configuration featuring a Caddy reverse proxy, pre-built images, and
+  environment
+  variable management.
+- **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
+- **API Documentation:** Interactive Swagger/OpenAPI UI.
 
 ## Tech Stack
 
