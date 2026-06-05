@@ -67,6 +67,15 @@ services:
     depends_on:
       - app
 
+  prometheus:
+    image: prom/prometheus:v3
+    container_name: flight-reservation-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - app
+
 volumes:
   postgres_data:
   valkey_data:
