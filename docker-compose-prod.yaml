@@ -32,8 +32,6 @@ services:
     image: ghcr.io/antorof1/flight-reservation-service:${APP_IMAGE_TAG:-latest}
     container_name: flight-reservation-app
     restart: always
-    expose:
-      - "8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
