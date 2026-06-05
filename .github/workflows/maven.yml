@@ -2,9 +2,9 @@ name: Java CI/CD with Maven and Docker
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
 
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
   publish:
     name: Build and push Docker image
     needs: test
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
@@ -72,7 +72,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     needs: publish
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     steps:
