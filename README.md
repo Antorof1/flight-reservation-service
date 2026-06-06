@@ -11,15 +11,20 @@ locking and automated cleanup of expired reservations.
 
 ## Live Demo
 
-The application is deployed as a headless API service. You can interact with the live endpoints directly via the Swagger UI.
+The application is deployed as a headless API service. You can interact with the live endpoints directly via the Swagger
+UI.
 
 * **API Base URL:** [https://flight.antonbazykin.com](https://flight.antonbazykin.com)
+* **Monitoring Dashboard:** [https://grafana-flight.antonbazykin.com](https://grafana-flight.antonbazykin.com)
 * **Interactive Swagger UI:** [https://flight.antonbazykin.com/swagger-ui.html](https://flight.antonbazykin.com/swagger-ui.html)
 * **OpenAPI Specification:** [https://flight.antonbazykin.com/v3/api-docs](https://flight.antonbazykin.com/v3/api-docs)
 
 #### Infrastructure Stack
 
 - **Cloud Provider:** Hosted on an **Oracle Cloud VPS** (ARM64).
+- **Monitoring & Observability:**
+    - **Prometheus:** Collects application metrics via Spring Boot Actuator.
+    - **Grafana:** Visualizes JVM metrics, request rates and system health using pre-configured dashboards.
 - **Edge Network:**
     - **Cloudflare Proxy:** The application sits behind the Cloudflare proxy, masking the origin IP and providing a
       layer of protection against DDoS attacks.
@@ -54,6 +59,10 @@ To ensure the demo remains performant and accessible to everyone, the environmen
   variable management.
 - **Robust Testing:** Extensive coverage with rich unit tests and integration tests using Testcontainers.
 - **API Documentation:** Interactive Swagger/OpenAPI UI.
+- **Observability & Monitoring:**
+    - **Real-time Metrics:** Integrated Spring Boot Actuator with Micrometer.
+    - **Prometheus Integration:** Automated metrics scraping.
+    - **Grafana Dashboards:** Provisioned JVM (Micrometer) dashboards for monitoring heap usage, CPU and thread counts.
 
 ## Tech Stack
 
@@ -68,6 +77,8 @@ To ensure the demo remains performant and accessible to everyone, the environmen
 - **Testing:** JUnit 5, Mockito, Testcontainers, WebTestClient
 - **CI/CD:** GitHub Actions & GitHub Container Registry
 - **Reverse Proxy:** Caddy
+- **Monitoring:** Prometheus, Grafana
+- **Metrics Tooling:** Micrometer, Spring Boot Actuator
 
 ## Prerequisites
 
@@ -116,6 +127,8 @@ The application relies on the following key environment variables:
 | `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR               | `latest`                | 
 | `DOMAIN`                 | Domain name configured in Caddy                  | `localhost`             |
 | `TRUSTED_PROXIES`        | Space-separated list of trusted proxy IPs (CIDR) | `127.0.0.1/32`          |
+| `GRAFANA_ADMIN_USER`     | Grafana adminstrative username                   | `admin`                 |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana adminstrative password                   | `admin`                 |
 
 *Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
 
