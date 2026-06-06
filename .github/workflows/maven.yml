@@ -77,16 +77,28 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Executing remote ssh commands
-      uses: appleboy/ssh-action@v1.0.3
+    - name: Run Ansible Playbook
+      uses: dawidd6/action-ansible-playbook@v9
+      env:
+        DB_USER: ${{ vars.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ vars.DB_NAME }}
+        VALKEY_PASSWORD: ${{ secrets.VALKEY_PASSWORD }}
+        SPRING_PROFILES_ACTIVE: ${{ vars.SPRING_PROFILES_ACTIVE }}
+        APP_IMAGE_TAG: ${{ vars.APP_IMAGE_TAG }}
+        DOMAIN: ${{ vars.DOMAIN }}
+        TRUSTED_PROXIES: ${{ vars.TRUSTED_PROXIES }}
+        TLS_CERT: ${{ secrets.TLS_CERT }}
+        TLS_KEY: ${{ secrets.TLS_KEY }}
+        GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
+        GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
       with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USERNAME }}
+        playbook: deploy.yml
+        directory: ansible
         key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd ${{ secrets.VPS_APP_PATH }}
+        inventory: |
+          [prod]
+          ${{ secrets.VPS_HOST }}
+        options: |
+          -u ${{ secrets.VPS_USERNAME }}
 
-          docker compose -f docker-compose.yaml pull app
-          docker compose -f docker-compose.yaml up -d
-          
-          docker image prune -f
