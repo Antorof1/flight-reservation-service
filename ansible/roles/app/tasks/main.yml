@@ -1,0 +1,93 @@
+---
+- name: Ensure application directory exists
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Create necessary subdirectories for volume mounts
+  file:
+    path: "{{ app_dir }}/{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  loop:
+    - caddy/certs
+    - caddy/conf.d
+    - grafana/provisioning/datasources
+    - grafana/provisioning/dashboards
+
+- name: Sync Grafana configurations
+  copy:
+    src: "../grafana"
+    dest: "{{ app_dir }}/"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Sync Caddy configurations
+  copy:
+    src: "../caddy/{{ item }}"
+    dest: "{{ app_dir }}/caddy"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  loop:
+    - Caddyfile
+    - conf.d
+
+- name: Write TLS Certificate
+  copy:
+    content: "{{ item.content }}\n"
+    dest: "{{ app_dir }}/caddy/certs/{{ item.dest }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { content: "{{ tls_cert }}", dest: "cert.crt", mode: "0644" }
+    - { content: "{{ tls_key }}", dest: "key.key", mode: "0600" }
+  when: tls_cert | length > 0 and tls_key | length > 0
+
+- name: Create certs.caddy snippet to enable Cloudflare TLS
+  copy:
+    content: "tls /etc/caddy/certs/cert.crt /etc/caddy/certs/key.key\n"
+    dest: "{{ app_dir }}/caddy/conf.d/certs.caddy"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+  when: tls_cert | length > 0 and tls_key | length > 0
+
+- name: Copy Prometheus configuration file
+  copy:
+    src: "../prometheus.yml"
+    dest: "{{ app_dir }}/prometheus.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Copy docker-compose-prod.yaml to server
+  copy:
+    src: "../docker-compose-prod.yaml"
+    dest: "{{ app_dir }}/docker-compose.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0644'
+
+- name: Generate .env file from template
+  template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+
+- name: Pull latest Docker images
+  command: docker compose pull
+  args:
+    chdir: "{{ app_dir }}"
+
+- name: Restart Docker Compose services
+  command: docker compose up -d --force-recreate
+  args:
+    chdir: "{{ app_dir }}"
+

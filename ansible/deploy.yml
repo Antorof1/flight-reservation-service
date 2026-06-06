@@ -1,0 +1,9 @@
+---
+- name: Deploy Flight Reservation Service
+  hosts: prod
+  become: yes
+  
+  roles:
+    - system
+    - docker
+    - app

@@ -1,0 +1,33 @@
+---
+- name: Update apt cache and upgrade packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install required system packages
+  apt:
+    name:
+      - curl
+      - git
+      - cron
+      - ufw
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Allow HTTPS and SSH through UFW firewall
+  ufw:
+    rule: allow
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop:
+    - { port: '22', proto: 'tcp' }
+    - { port: '443', proto: 'tcp' }
+    - { port: '443', proto: 'udp' }
+
+- name: Enable UFW
+  ufw:
+    state: enabled
