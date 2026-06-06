@@ -57,6 +57,12 @@
     group: "{{ ansible_user }}"
   when: tls_cert | length > 0 and tls_key | length > 0
 
+- name: Remove certs.caddy snippet if TLS is disabled
+  file:
+    path: "{{ app_dir }}/caddy/conf.d/certs.caddy"
+    state: absent
+  when: tls_cert is not defined or tls_cert is none or tls_cert | length == 0
+
 - name: Copy Prometheus configuration file
   copy:
     src: "../prometheus.yml"
