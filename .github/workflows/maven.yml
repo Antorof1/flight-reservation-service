@@ -100,5 +100,5 @@ jobs:
           [prod]
           ${{ secrets.VPS_HOST }}
         options: |
-          -u ${{ secrets.VPS_USERNAME }}
+          -u ${{ vars.VPS_USERNAME }}
 
