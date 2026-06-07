@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+log() {
+  echo "[$(date +'%d.%m.%Y %H:%M:%S')] $1"
+}
+
+COMPOSE_FILE="{{ app_dir }}/docker-compose.yaml"
+
+DB_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q db)"
+VALKEY_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q valkey)"
+APP_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q app)"
+
+DB_USER="{{ db_user }}"
+DB_NAME="{{ db_name }}"
+VALKEY_PASSWORD="{{ valkey_password }}"
+
+log "Dropping and recreating public database schema..."
+docker exec $DB_CONTAINER psql -U $DB_USER -d $DB_NAME -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+log "Flushing Valkey cache..."
+docker exec -i $VALKEY_CONTAINER valkey-cli -a $VALKEY_PASSWORD flushall
+
+log "Restarting application container..."
+docker restart $APP_CONTAINER
+
+log "Waiting for application to become responsive..."
+MAX_ATTEMPTS=15
+DELAY_SECONDS=4
+APP_READY=false
+
+for ((i=1; i<=MAX_ATTEMPTS; i++)); do
+  set +e
+  HTTP_STATUS=$(docker exec $APP_CONTAINER wget -S --spider "http://localhost:8080/api/v1/flights" 2>&1 | grep -Ei 'HTTP/[0-9.]+' | awk '{print $2}')
+  HTTP_STATUS="${HTTP_STATUS:-000}"
+  set -e
+  
+  if [[ "$HTTP_STATUS" != "000" && "$HTTP_STATUS" -ne 502 && "$HTTP_STATUS" -ne 503 ]]; then
+    log "Application is responsive (HTTP $HTTP_STATUS)."
+    APP_READY=true
+    break
+  fi
+  
+  log "Application not ready yet, retrying in ${DELAY_SECONDS}s... ($i/$MAX_ATTEMPTS)"
+  sleep "$DELAY_SECONDS"
+done
+
+if [ "$APP_READY" = false ]; then
+  log "Error: Application failed to start within expected window. Aborting seed."
+  exit 1
+fi
+
+seed_post() {
+  local endpoint=$1
+  local data=$2
+  log "Seeding: $endpoint"
+  
+  local response
+  set +e
+  response=$(docker exec -i $APP_CONTAINER wget -S -O- \
+    --post-data="$data" \
+    --header="Content-Type: application/json" \
+    "http://localhost:8080/api/v1$endpoint" 2>&1)
+  set -e
+
+  local status_code
+  status_code=$(echo "$response" | grep -oP 'HTTP/[0-9.]+\s+\K[0-9]{3}' || true)
+
+  if [[ "$status_code" -lt 200 || "$status_code" -gt 299 ]]; then
+    log "Error: Seeding failed for $endpoint with HTTP status $status_code"
+    log "Response details: $response"
+    return 1
+  fi
+}
+
+log "Executing seeding scripts..."
+
+seed_post "/users" '{
+  "email": "john.doe@example.com",
+  "name" : "John Doe"
+}'
+
+seed_post "/flights" '{
+  "flightNumber": "PL-2026",
+  "departureAirport": "WRO",
+  "arrivalAirport": "WAW",
+  "departureTime": "2026-06-03T10:00:00Z",
+  "arrivalTime": "2026-06-03T14:00:00Z"
+}'
+
+log "Database reset and seeding completed successfully"

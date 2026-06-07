@@ -1,5 +1,6 @@
 ---
 app_dir: "/opt/flight-reservation-service"
+is_demo: "{{ lookup('env', 'IS_DEMO') | default('false', true) | bool }}"
 
 db_user: "{{ lookup('env', 'DB_USER') | default('db_user', true) }}"
 db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
