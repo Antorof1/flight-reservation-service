@@ -92,6 +92,7 @@ jobs:
         TLS_KEY: ${{ secrets.TLS_KEY }}
         GRAFANA_ADMIN_USER: ${{ vars.GRAFANA_ADMIN_USER }}
         GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
+        IS_DEMO: ${{ vars.IS_DEMO }}
       with:
         playbook: deploy.yml
         directory: ansible
