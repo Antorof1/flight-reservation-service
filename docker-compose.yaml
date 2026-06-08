@@ -11,3 +11,5 @@ services:
     image: 'valkey/valkey:9.1-alpine'
     ports:
       - '6379'
+    labels:
+      org.springframework.boot.service-connection: redis
