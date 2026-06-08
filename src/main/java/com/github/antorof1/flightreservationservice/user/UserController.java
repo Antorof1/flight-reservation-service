@@ -12,12 +12,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -75,15 +78,18 @@ public class UserController {
     }
 
     @GetMapping("/{id}/reservations")
-    @Operation(summary = "Get user reservations", description = "Retrieves all reservations for a specific user.")
+    @Operation(summary = "Get user reservations", description = "Retrieves a paginated list of reservations for a " +
+        "specific user.")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved user reservations")
     @ApiResponse(responseCode = "404", description = "User not found")
-    public ResponseEntity<List<ReservationResponse>> getReservationsByUserId(@PathVariable Long id) {
+    public ResponseEntity<Page<ReservationResponse>> getReservationsByUserId(
+        @PathVariable Long id, @ParameterObject @PageableDefault(sort = "createdAt",
+            direction = Sort.Direction.DESC) Pageable pageable) {
         User user = userService.getUserById(id);
-        List<Reservation> reservations = reservationService.getAllReservationsByUser(user);
+        Page<Reservation> reservations = reservationService.getAllReservationsByUser(user, pageable);
 
-        List<ReservationResponse> reservationResponses =
-            reservations.stream().map(ReservationResponse::fromEntity).toList();
+        Page<ReservationResponse> reservationResponses =
+            reservations.map(ReservationResponse::fromEntity);
 
         return ResponseEntity.ok(reservationResponses);
     }

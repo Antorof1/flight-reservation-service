@@ -9,6 +9,8 @@ import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,8 +77,8 @@ public class ReservationService {
         }
     }
 
-    public List<Reservation> getAllReservationsByUser(User user) {
-        return reservationRepository.findAllByUser(user);
+    public Page<Reservation> getAllReservationsByUser(User user, Pageable pageable) {
+        return reservationRepository.findAllByUser(user, pageable);
     }
 
     public Reservation getReservationById(Long id) {
