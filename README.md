@@ -39,8 +39,8 @@ UI.
 
 To ensure the demo remains performant and accessible to everyone, the environment includes:
 
-- **Daily State Reset:** A scheduled cron job runs once every 24 hours to clear the PostgreSQL and Valkey databases,
-  ensuring a "fresh" state for new visitors.
+- **Daily State Reset & Seeding:** When the demo mode is enabled, a scheduled cron job runs once every 24 hours to clear
+  the PostgreSQL and Valkey databases, running a seeding script to populate fresh sample data for visitors.
 - **Automated Health Checks:** The service is automatically restarted during maintenance to verify deployment integrity.
 
 ## Features
@@ -243,16 +243,17 @@ Configure these as **Secrets** to protect sensitive credentials and keys.
 
 Configure these as **Variables** for general application settings.
 
-| Variable Name            | Description                                                                                                         |
-|:-------------------------|:--------------------------------------------------------------------------------------------------------------------|
-| `VPS_USERNAME`           | SSH system user on the target VPS.                                                                                  |
-| `DOMAIN`                 | Production domain name configured in Caddy (defaults to `localhost`).                                               |
-| `SPRING_PROFILES_ACTIVE` | Active Spring Boot profiles (defaults to `prod`).                                                                   |
-| `APP_IMAGE_TAG`          | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                     |
-| `DB_USER`                | PostgreSQL administrative username (defaults to `db_user`).                                                         |
-| `DB_NAME`                | Name of the primary database (defaults to `flight_reservation_db`).                                                 |
-| `GRAFANA_ADMIN_USER`     | Admin username for the Grafana dashboard (defaults to `admin`).                                                     |
-| `TRUSTED_PROXIES`        | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping. |
+| Variable Name            | Description                                                                                                                        |
+|:-------------------------|:-----------------------------------------------------------------------------------------------------------------------------------|
+| `VPS_USERNAME`           | SSH system user on the target VPS.                                                                                                 |
+| `DOMAIN`                 | Production domain name configured in Caddy (defaults to `localhost`).                                                              |
+| `SPRING_PROFILES_ACTIVE` | Active Spring Boot profiles (defaults to `prod`).                                                                                  |
+| `APP_IMAGE_TAG`          | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                                    |
+| `DB_USER`                | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
+| `DB_NAME`                | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
+| `GRAFANA_ADMIN_USER`     | Admin username for the Grafana dashboard (defaults to `admin`).                                                                    |
+| `TRUSTED_PROXIES`        | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping.                |
+| `IS_DEMO`                | *Optional* Boolean flag to enable demo-specific environment behaviors, such as daily database seeding/reset (defaults to `false`). |
 
 ## Architecture
 
