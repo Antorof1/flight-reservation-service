@@ -13,6 +13,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -85,15 +89,22 @@ class FlightServiceTest {
     }
 
     @Test
-    @DisplayName("Should return all flights")
-    void getAllFlights_ReturnsList() {
+    @DisplayName("Should return a page of flights")
+    void getAllFlights_ReturnsPage() {
+        Pageable pageable = PageRequest.of(0, 10);
         List<Flight> flights = List.of(new Flight(), new Flight());
-        when(flightRepository.findAll()).thenReturn(flights);
 
-        List<Flight> result = flightService.getAllFlights();
+        Page<Flight> flightPage = new PageImpl<>(flights, pageable, flights.size());
 
-        assertThat(result).hasSize(2);
-        verify(flightRepository).findAll();
+        when(flightRepository.findAll(pageable)).thenReturn(flightPage);
+
+        Page<Flight> result = flightService.getAllFlights(pageable);
+
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+
+        verify(flightRepository).findAll(pageable);
     }
 
     @Test

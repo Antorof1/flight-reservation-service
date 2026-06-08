@@ -5,6 +5,8 @@ import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
 import com.github.antorof1.flightreservationservice.seat.SeatRepository;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +39,8 @@ public class FlightService {
         return savedFlight;
     }
 
-    public List<Flight> getAllFlights() {
-        return flightRepository.findAll();
+    public Page<Flight> getAllFlights(Pageable pageable) {
+        return flightRepository.findAll(pageable);
     }
 
     public Flight getFlightById(Long id) {

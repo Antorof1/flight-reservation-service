@@ -12,6 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,12 +35,13 @@ public class FlightController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all flights", description = "Retrieves a list of all available flights.")
+    @Operation(summary = "Get all flights", description = "Retrieves a paginated list of all available flights.")
     @ApiResponse(responseCode = "200", description = "Successfully retrieved flights")
-    public ResponseEntity<List<FlightResponse>> getFlights() {
-        List<Flight> flights = flightService.getAllFlights();
+    public ResponseEntity<Page<FlightResponse>> getFlights(@ParameterObject @PageableDefault(
+        sort = "departureTime") Pageable pageable) {
+        Page<Flight> flights = flightService.getAllFlights(pageable);
 
-        List<FlightResponse> flightResponses = flights.stream().map(FlightResponse::fromEntity).toList();
+        Page<FlightResponse> flightResponses = flights.map(FlightResponse::fromEntity);
 
         return ResponseEntity.ok(flightResponses);
     }

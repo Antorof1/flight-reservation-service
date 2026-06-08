@@ -10,6 +10,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,17 +44,25 @@ class FlightControllerTest {
     private SeatService seatService;
 
     @Test
-    @DisplayName("GET /api/v1/flights should return a list of flights")
+    @DisplayName("GET /api/v1/flights should return a paginated list of flights")
     void shouldReturnAllFlights() throws Exception {
         Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5));
         flight.setId(1L);
+        Page<Flight> flightPage = new PageImpl<>(List.of(flight));
 
-        when(flightService.getAllFlights()).thenReturn(List.of(flight));
+        when(flightService.getAllFlights(any(Pageable.class))).thenReturn(flightPage);
 
-        mockMvc.perform(get("/api/v1/flights"))
+        mockMvc.perform(get("/api/v1/flights")
+                .param("page", "0")
+                .param("size", "10")
+                .param("sort", "departureTime,asc"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].flightNumber").value("FL123"));
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.content[0].flightNumber").value("FL123"))
+            .andExpect(jsonPath("$.totalElements").value(1))
+            .andExpect(jsonPath("$.totalPages").value(1))
+            .andExpect(jsonPath("$.size").value(1))
+            .andExpect(jsonPath("$.number").value(0));
     }
 
     @Test
