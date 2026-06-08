@@ -164,7 +164,7 @@ Once the application is running, you can access the interactive API documentatio
 
 | Resource         | Method  | Endpoint                            | Description                                      |
 |:-----------------|:--------|:------------------------------------|:-------------------------------------------------|
-| **Flights**      | `GET`   | `/api/v1/flights`                   | List all flights                                 |
+| **Flights**      | `GET`   | `/api/v1/flights`                   | List all flights with pagination                 |
 |                  | `GET`   | `/api/v1/flights/{id}`              | Get flight details by ID                         |
 |                  | `GET`   | `/api/v1/flights/{id}/seats`        | List seats for a flight (optional status filter) |
 |                  | `POST`  | `/api/v1/flights`                   | Create a new flight                              |
@@ -175,7 +175,7 @@ Once the application is running, you can access the interactive API documentatio
 |                  | `PUT`   | `/api/v1/reservations/{id}/cancel`  | Cancel a reservation                             |
 | **Users**        | `GET`   | `/api/v1/users`                     | Find user by email                               |
 |                  | `GET`   | `/api/v1/users/{id}`                | Get user profile by ID                           |
-|                  | `GET`   | `/api/v1/users/{id}/reservations`   | Get user reservation history                     |
+|                  | `GET`   | `/api/v1/users/{id}/reservations`   | Get user reservation history with pagination     |
 |                  | `POST`  | `/api/v1/users`                     | Register a new user                              |
 
 ### Global Error Handling
