@@ -3,6 +3,7 @@ package com.github.antorof1.flightreservationservice.user;
 import com.github.antorof1.flightreservationservice.reservation.Reservation;
 import com.github.antorof1.flightreservationservice.reservation.ReservationService;
 import com.github.antorof1.flightreservationservice.reservation.dto.ReservationResponse;
+import com.github.antorof1.flightreservationservice.user.command.CreateUserCommand;
 import com.github.antorof1.flightreservationservice.user.dto.CreateUserRequest;
 import com.github.antorof1.flightreservationservice.user.dto.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,8 +58,9 @@ public class UserController {
     @ApiResponse(responseCode = "201", description = "User successfully created")
     @ApiResponse(responseCode = "400", description = "Invalid input or email already exists")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
-        User user = request.toEntity();
-        User savedUser = userService.createUser(user);
+        CreateUserCommand command = request.toCommand();
+
+        User savedUser = userService.createUser(command);
 
         UserResponse response = UserResponse.fromEntity(savedUser);
 
