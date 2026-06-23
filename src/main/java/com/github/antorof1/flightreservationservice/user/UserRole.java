@@ -1,6 +1,13 @@
 package com.github.antorof1.flightreservationservice.user;
 
-public enum UserRole {
+import org.springframework.security.core.GrantedAuthority;
+
+public enum UserRole implements GrantedAuthority {
     USER,
-    ADMIN
+    ADMIN;
+
+    @Override
+    public String getAuthority() {
+        return "ROLE_" + name();
+    }
 }
