@@ -35,7 +35,11 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
     void shouldCompleteBookingWorkflow() {
         Flight flight = flightFactory.createFlight("FL-123");
 
-        CreateUserRequest userRequest = new CreateUserRequest("john.doe@example.com", "John Doe");
+        CreateUserRequest userRequest = new CreateUserRequest(
+            "john.doe@example.com",
+            "John Doe",
+            "password123"
+        );
 
         UserResponse userResponse = testClient.post()
             .uri("/api/v1/users")

@@ -7,6 +7,7 @@ import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.user.User;
+import com.github.antorof1.flightreservationservice.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,12 @@ class ReservationControllerTest {
 
     @BeforeEach
     void setUp() {
-        user = new User("john.doe@example.com", "John Doe");
+        user = new User(
+            "john.doe@example.com",
+            "John Doe",
+            "password123",
+            UserRole.USER
+        );
         user.setId(1L);
 
         Flight flight = new Flight(

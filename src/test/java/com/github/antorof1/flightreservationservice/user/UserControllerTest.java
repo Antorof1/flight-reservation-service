@@ -8,6 +8,7 @@ import com.github.antorof1.flightreservationservice.reservation.ReservationStatu
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
+import com.github.antorof1.flightreservationservice.user.command.CreateUserCommand;
 import com.github.antorof1.flightreservationservice.user.dto.CreateUserRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,12 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /api/v1/users?email=... should return a user when it exists")
     void shouldReturnUserByEmail() throws Exception {
-        User user = new User("john.doe@example.com", "John Doe");
+        User user = new User(
+            "john.doe@example.com",
+            "John Doe",
+            "password123",
+            UserRole.USER
+        );
         user.setId(1L);
 
         when(userService.getUserByEmail("john.doe@example.com")).thenReturn(user);
@@ -75,11 +81,15 @@ class UserControllerTest {
     @Test
     @DisplayName("POST /api/v1/users should create a new user")
     void shouldCreateUser() throws Exception {
-        CreateUserRequest request = new CreateUserRequest("john.doe@example.com", "John Doe");
+        CreateUserRequest request = new CreateUserRequest(
+            "john.doe@example.com",
+            "John Doe",
+            "password123"
+        );
         User savedUser = request.toEntity();
         savedUser.setId(1L);
 
-        when(userService.createUser(any(User.class))).thenReturn(savedUser);
+        when(userService.createUser(any(CreateUserCommand.class))).thenReturn(savedUser);
 
         mockMvc.perform(post("/api/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -92,7 +102,12 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /api/v1/users/{id} should return a user when it exists")
     void shouldReturnUserById() throws Exception {
-        User user = new User("john.doe@example.com", "John Doe");
+        User user = new User(
+            "john.doe@example.com",
+            "John Doe",
+            "password123",
+            UserRole.USER
+        );
         user.setId(1L);
 
         when(userService.getUserById(1L)).thenReturn(user);
@@ -116,7 +131,12 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /api/v1/users/{id}/reservations should return user reservations")
     void shouldReturnUserReservations() throws Exception {
-        User user = new User("john.doe@example.com", "John Doe");
+        User user = new User(
+            "john.doe@example.com",
+            "John Doe",
+            "password123",
+            UserRole.USER
+        );
         user.setId(1L);
 
         Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5));

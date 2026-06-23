@@ -2,6 +2,7 @@ package com.github.antorof1.flightreservationservice.factory;
 
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserService;
+import com.github.antorof1.flightreservationservice.user.command.CreateUserCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,13 +12,19 @@ import java.util.List;
 
 @Component
 public class UserTestDataFactory {
+    private static final String DEFAULT_PASSWORD = "password123";
+
     @Autowired
     private UserService userService;
 
     public User createUser(String email, String name) {
-        User user = new User(email, name);
+        CreateUserCommand command = new CreateUserCommand(
+            email,
+            name,
+            DEFAULT_PASSWORD
+        );
 
-        return userService.createUser(user);
+        return userService.createUser(command);
     }
 
     public User createUser(String email) {
