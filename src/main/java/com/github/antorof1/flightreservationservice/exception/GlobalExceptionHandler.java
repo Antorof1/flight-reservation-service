@@ -1,5 +1,8 @@
 package com.github.antorof1.flightreservationservice.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -89,6 +92,39 @@ public class GlobalExceptionHandler {
         );
 
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ApiErrorResponse> handleExpiredJwtException(ExpiredJwtException ex, HttpServletRequest request) {
+        ApiErrorResponse error = new ApiErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            "Token has expired",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(SignatureException.class)
+    public ResponseEntity<ApiErrorResponse> handleSignatureException(SignatureException ex, HttpServletRequest request) {
+        ApiErrorResponse error = new ApiErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            "Invalid token signature",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(MalformedJwtException.class)
+    public ResponseEntity<ApiErrorResponse> handleMalformedJwtException(MalformedJwtException ex, HttpServletRequest request) {
+        ApiErrorResponse error = new ApiErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            "Malformed token structure",
+            request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(Exception.class)
