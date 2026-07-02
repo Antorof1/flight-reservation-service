@@ -43,10 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtUtils.extractClaims(token);
 
-            String username = claims.getSubject();
+            String subject = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            if (username == null || username.trim().isEmpty()) {
+            if (subject == null || subject.trim().isEmpty()) {
                 throw new MalformedJwtException("JWT payload is missing the subject");
             }
 
@@ -57,7 +57,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             List<UserRole> authorities = List.of(UserRole.valueOf(role));
 
             UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(username, null, authorities);
+                new UsernamePasswordAuthenticationToken(subject, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
