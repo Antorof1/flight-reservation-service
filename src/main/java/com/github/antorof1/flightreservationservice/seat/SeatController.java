@@ -4,6 +4,7 @@ import com.github.antorof1.flightreservationservice.seat.dto.SeatResponse;
 import com.github.antorof1.flightreservationservice.seat.dto.SeatStatusUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/seats")
 @Tag(name = "Seat", description = "The Seat API")
+@SecurityRequirement(name = "Bearer Authentication")
 public class SeatController {
     private final SeatService seatService;
 

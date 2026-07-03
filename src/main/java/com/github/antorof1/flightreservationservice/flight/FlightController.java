@@ -9,6 +9,7 @@ import com.github.antorof1.flightreservationservice.seat.dto.SeatResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
@@ -78,7 +79,8 @@ public class FlightController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a new flight", description = "Creates a new flight with the provided details.")
+    @Operation(summary = "Create a new flight", description = "Creates a new flight with the provided details.",
+        security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponse(responseCode = "201", description = "Flight successfully created")
     @ApiResponse(responseCode = "400", description = "Invalid input")
     public ResponseEntity<FlightResponse> createFlight(@Valid @RequestBody CreateFlightRequest request) {

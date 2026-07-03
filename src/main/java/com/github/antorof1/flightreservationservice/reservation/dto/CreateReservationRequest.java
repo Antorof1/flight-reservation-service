@@ -6,10 +6,6 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Request object for creating a new reservation")
 public record CreateReservationRequest(
     @NotNull
-    @Schema(description = "ID of the user making the reservation", example = "1")
-    Long userId,
-
-    @NotNull
     @Schema(description = "ID of the seat to reserve", example = "101")
     Long seatId
 ) {
