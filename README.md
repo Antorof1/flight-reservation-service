@@ -16,7 +16,7 @@ UI.
 
 * **API Base URL:** [https://flight.antonbazykin.com](https://flight.antonbazykin.com)
 * **Monitoring Dashboard:** [https://grafana-flight.antonbazykin.com](https://grafana-flight.antonbazykin.com)
-* **Interactive Swagger UI:** [https://flight.antonbazykin.com/swagger-ui.html](https://flight.antonbazykin.com/swagger-ui.html)
+* **Interactive Swagger UI:** [https://flight.antonbazykin.com/swagger-ui/index.html](https://flight.antonbazykin.com/swagger-ui/index.html)
 * **OpenAPI Specification:** [https://flight.antonbazykin.com/v3/api-docs](https://flight.antonbazykin.com/v3/api-docs)
 
 #### Infrastructure Stack
