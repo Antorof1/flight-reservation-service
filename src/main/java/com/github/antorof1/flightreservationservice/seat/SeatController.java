@@ -23,7 +23,7 @@ public class SeatController {
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('admin')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update seat status", description = "Updates the status of a specific seat.")
     @ApiResponse(responseCode = "200", description = "Successfully updated seat status")
     @ApiResponse(responseCode = "400", description = "Invalid input")
