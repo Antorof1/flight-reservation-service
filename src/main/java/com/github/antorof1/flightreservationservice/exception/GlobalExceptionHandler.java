@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -125,6 +126,19 @@ public class GlobalExceptionHandler {
             request.getRequestURI()
         );
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAuthorizationDeniedException(AuthorizationDeniedException ex,
+                                                                               HttpServletRequest request) {
+        ApiErrorResponse response = new ApiErrorResponse(
+            HttpStatus.FORBIDDEN.value(),
+            HttpStatus.FORBIDDEN.getReasonPhrase(),
+            "Access denied",
+            request.getRequestURI()
+        );
+
+        return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(Exception.class)
