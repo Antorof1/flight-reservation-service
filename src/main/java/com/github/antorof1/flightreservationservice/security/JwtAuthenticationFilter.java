@@ -61,10 +61,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new MalformedJwtException("JWT payload is missing the user role");
             }
 
-            List<UserRole> authorities = List.of(UserRole.valueOf(role));
+            Long userId = Long.parseLong(subject);
+            UserRole userRole = UserRole.valueOf(role);
+            JwtPrincipal principal = new JwtPrincipal(userId, userRole);
+
+            List<UserRole> authorities = List.of(userRole);
 
             UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(subject, null, authorities);
+                new UsernamePasswordAuthenticationToken(principal, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception e) {
