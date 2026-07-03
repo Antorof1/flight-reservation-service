@@ -1,9 +1,10 @@
 package com.github.antorof1.flightreservationservice.factory;
 
 import com.github.antorof1.flightreservationservice.user.User;
-import com.github.antorof1.flightreservationservice.user.UserService;
-import com.github.antorof1.flightreservationservice.user.command.CreateUserCommand;
+import com.github.antorof1.flightreservationservice.user.UserRepository;
+import com.github.antorof1.flightreservationservice.user.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,16 +16,22 @@ public class UserTestDataFactory {
     private static final String DEFAULT_PASSWORD = "password123";
 
     @Autowired
-    private UserService userService;
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public User createUser(String email, String name) {
-        CreateUserCommand command = new CreateUserCommand(
+        String encodedPassword = passwordEncoder.encode(DEFAULT_PASSWORD);
+
+        User user = new User(
             email,
             name,
-            DEFAULT_PASSWORD
+            encodedPassword,
+            UserRole.USER
         );
 
-        return userService.createUser(command);
+        return userRepository.save(user);
     }
 
     public User createUser(String email) {
