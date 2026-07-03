@@ -1,10 +1,15 @@
 package com.github.antorof1.flightreservationservice.config;
 
+import com.github.antorof1.flightreservationservice.exception.ApiErrorResponse;
+import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.media.Content;
+import io.swagger.v3.oas.models.media.MediaType;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -12,6 +17,8 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
 
 @Configuration
 public class OpenApiConfig {
@@ -38,19 +45,38 @@ public class OpenApiConfig {
     }
 
     @Bean
-    public OpenApiCustomizer securityResponsesCustomizer() {
-        return openApi ->
+    public OpenApiCustomizer errorResponsesCustomizer() {
+        return openApi -> {
+            @SuppressWarnings("rawtypes")
+            Map<String, Schema> schemas = ModelConverters.getInstance().readAll(ApiErrorResponse.class);
+            schemas.forEach(openApi.getComponents()::addSchemas);
+
+            Content errorContent = new Content().addMediaType(
+                "application/json",
+                new MediaType().schema(new Schema<>().$ref("#/components/schemas/ApiErrorResponse"))
+            );
+
             openApi.getPaths().values().forEach(pathItem ->
                 pathItem.readOperations().forEach(operation -> {
-                    if (operation.getSecurity() != null && !operation.getSecurity().isEmpty()) {
-                        ApiResponses responses = operation.getResponses();
+                    ApiResponses responses = operation.getResponses();
 
+                    if (operation.getSecurity() != null && !operation.getSecurity().isEmpty()) {
                         if (!responses.containsKey("403")) {
-                            responses.addApiResponse("403", new ApiResponse().description(
-                                "You do not have permission to access this resource"
-                            ));
+                            responses.addApiResponse("403", new ApiResponse()
+                                .description("You do not have permission to access this resource")
+                                .content(errorContent)
+                            );
                         }
                     }
-                }));
+
+                    responses.forEach((statusCode, response) -> {
+                        // Check if the status code is a 4xx or 5xx error
+                        if (statusCode.matches("^[45]\\d{2}$")) {
+                            response.setContent(errorContent);
+                        }
+                    });
+                })
+            );
+        };
     }
 }
