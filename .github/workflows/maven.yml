@@ -84,6 +84,7 @@ jobs:
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_NAME: ${{ vars.DB_NAME }}
         VALKEY_PASSWORD: ${{ secrets.VALKEY_PASSWORD }}
+        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
         SPRING_PROFILES_ACTIVE: ${{ vars.SPRING_PROFILES_ACTIVE }}
         APP_IMAGE_TAG: ${{ vars.APP_IMAGE_TAG }}
         DOMAIN: ${{ vars.DOMAIN }}
