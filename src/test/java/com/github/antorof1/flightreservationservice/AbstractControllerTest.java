@@ -3,6 +3,7 @@ package com.github.antorof1.flightreservationservice;
 import com.github.antorof1.flightreservationservice.config.SecurityConfig;
 import com.github.antorof1.flightreservationservice.security.JwtPrincipal;
 import com.github.antorof1.flightreservationservice.security.JwtUtils;
+import com.github.antorof1.flightreservationservice.security.RestAuthenticationEntryPoint;
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserRole;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +16,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, RestAuthenticationEntryPoint.class})
 public class AbstractControllerTest {
     @MockitoBean
     protected JwtUtils jwtUtils;
