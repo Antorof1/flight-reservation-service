@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.flight;
 
+import com.github.antorof1.flightreservationservice.exception.DuplicateResourceException;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
@@ -28,7 +29,7 @@ public class FlightService {
     @Transactional
     public Flight createFlight(Flight flight) {
         if (flightRepository.existsByFlightNumber(flight.getFlightNumber())) {
-            throw new IllegalArgumentException("Flight number is already in use: " + flight.getFlightNumber());
+            throw new DuplicateResourceException("Flight number is already in use: " + flight.getFlightNumber());
         }
 
         Flight savedFlight = flightRepository.save(flight);

@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.flight;
 
+import com.github.antorof1.flightreservationservice.exception.DuplicateResourceException;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatClass;
@@ -74,13 +75,13 @@ class FlightServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw IllegalArgumentException when flight number already exists")
+    @DisplayName("Should throw DuplicateResourceException when flight number already exists")
     void createFlight_DuplicateFlightNumber_ThrowsException() {
         Flight flight = new Flight("FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(6));
         when(flightRepository.existsByFlightNumber(flight.getFlightNumber())).thenReturn(true);
 
         assertThatThrownBy(() -> flightService.createFlight(flight))
-            .isInstanceOf(IllegalArgumentException.class)
+            .isInstanceOf(DuplicateResourceException.class)
             .hasMessageContaining("Flight number is already in use");
 
         verify(flightRepository).existsByFlightNumber(flight.getFlightNumber());

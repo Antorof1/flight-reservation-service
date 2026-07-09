@@ -1,6 +1,7 @@
 package com.github.antorof1.flightreservationservice.auth;
 
 import com.github.antorof1.flightreservationservice.auth.dto.AuthResponse;
+import com.github.antorof1.flightreservationservice.exception.DuplicateResourceException;
 import com.github.antorof1.flightreservationservice.security.JwtUtils;
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserRepository;
@@ -35,7 +36,7 @@ public class AuthService {
     @Transactional
     public AuthResponse register(String email, String name, String password) {
         if (userRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email is already in use: " + email);
+            throw new DuplicateResourceException("Email is already in use: " + email);
         }
 
         String encodedPassword = passwordEncoder.encode(password);
