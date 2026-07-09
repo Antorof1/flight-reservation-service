@@ -1,6 +1,8 @@
 package com.github.antorof1.flightreservationservice.reservation;
 
 import com.github.antorof1.flightreservationservice.AbstractIntegrationTest;
+import com.github.antorof1.flightreservationservice.auth.dto.AuthResponse;
+import com.github.antorof1.flightreservationservice.auth.dto.RegisterRequest;
 import com.github.antorof1.flightreservationservice.flight.Flight;
 import com.github.antorof1.flightreservationservice.reservation.dto.CreateReservationRequest;
 import com.github.antorof1.flightreservationservice.reservation.dto.ReservationResponse;
@@ -9,8 +11,6 @@ import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.seat.dto.SeatResponse;
 import com.github.antorof1.flightreservationservice.user.User;
-import com.github.antorof1.flightreservationservice.user.dto.CreateUserRequest;
-import com.github.antorof1.flightreservationservice.user.dto.UserResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,26 +35,24 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
     void shouldCompleteBookingWorkflow() {
         Flight flight = flightFactory.createFlight("FL-123");
 
-        CreateUserRequest userRequest = new CreateUserRequest(
+        RegisterRequest registerRequest = new RegisterRequest(
             "john.doe@example.com",
             "John Doe",
             "password123"
         );
 
-        UserResponse userResponse = testClient.post()
-            .uri("/api/v1/users")
-            .bodyValue(userRequest)
+        AuthResponse authResponse = testClient.post()
+            .uri("/api/v1/auth/register")
+            .bodyValue(registerRequest)
             .exchange()
             .expectStatus().isCreated()
-            .expectBody(UserResponse.class)
+            .expectBody(AuthResponse.class)
             .returnResult()
             .getResponseBody();
 
-        assertThat(userResponse).isNotNull();
-        assertThat(userResponse.email()).isEqualTo(userRequest.email());
-        assertThat(userResponse.name()).isEqualTo(userRequest.name());
-
-        Long userId = userResponse.id();
+        assertThat(authResponse).isNotNull();
+        assertThat(authResponse.email()).isEqualTo(registerRequest.email());
+        assertThat(authResponse.name()).isEqualTo(registerRequest.name());
 
         List<SeatResponse> seatResponses = testClient.get()
             .uri(uriBuilder ->
@@ -73,11 +71,12 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
 
         Long seatId = seatResponses.getFirst().id();
 
-        CreateReservationRequest reservationRequest = new CreateReservationRequest(userId, seatId);
+        CreateReservationRequest reservationRequest = new CreateReservationRequest(seatId);
 
         ReservationResponse reservationResponse = testClient.post()
             .uri("/api/v1/reservations")
             .bodyValue(reservationRequest)
+            .header("Authorization", "Bearer " + authResponse.token())
             .exchange()
             .expectStatus().isCreated()
             .expectBody(ReservationResponse.class)
@@ -92,6 +91,7 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
 
         ReservationResponse confirmResponse = testClient.put()
             .uri("/api/v1/reservations/{id}/confirm", reservationId)
+            .header("Authorization", "Bearer " + authResponse.token())
             .exchange()
             .expectStatus().isOk()
             .expectBody(ReservationResponse.class)
@@ -118,7 +118,8 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             for (User user : users) {
-                CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
+                CreateReservationRequest request = new CreateReservationRequest(seat.getId());
+                String token = tokenFor(user);
 
                 executor.submit(() -> {
                     try {
@@ -127,6 +128,7 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
                         testClient.post()
                             .uri("/api/v1/reservations")
                             .bodyValue(request)
+                            .header("Authorization", "Bearer " + token)
                             .exchange()
                             .expectBody()
                             .consumeWith(result -> {
@@ -169,7 +171,8 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
                 Seat seat = seats.get(i);
                 User user = users.get(i);
 
-                CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
+                CreateReservationRequest request = new CreateReservationRequest(seat.getId());
+                String token = tokenFor(user);
 
                 executor.submit(() -> {
                     try {
@@ -178,6 +181,7 @@ public class ReservationIntegrationTest extends AbstractIntegrationTest {
                         testClient.post()
                             .uri("/api/v1/reservations")
                             .bodyValue(request)
+                            .header("Authorization", "Bearer " + token)
                             .exchange()
                             .expectBody(ReservationResponse.class)
                             .consumeWith(result -> {

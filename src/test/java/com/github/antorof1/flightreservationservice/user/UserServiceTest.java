@@ -1,11 +1,9 @@
 package com.github.antorof1.flightreservationservice.user;
 
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
-import com.github.antorof1.flightreservationservice.user.command.CreateUserCommand;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,8 +13,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
@@ -28,67 +26,6 @@ public class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
-
-    @Test
-    @DisplayName("Should successfully create a new user")
-    void createUser_Success() {
-        User user = new User(
-            "test@example.com",
-            "Test User",
-            "password123",
-            UserRole.USER
-        );
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(user);
-
-        CreateUserCommand command = new CreateUserCommand(
-            user.getEmail(),
-            user.getName(),
-            user.getPassword()
-        );
-
-        when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
-
-        User createdUser = userService.createUser(command);
-
-        assertThat(createdUser.getEmail()).isEqualTo("test@example.com");
-        assertThat(createdUser.getName()).isEqualTo("Test User");
-        verify(userRepository).existsByEmail(user.getEmail());
-
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-
-        User savedUser = userCaptor.getValue();
-        assertThat(savedUser.getEmail()).isEqualTo("test@example.com");
-        assertThat(savedUser.getName()).isEqualTo("Test User");
-        assertThat(savedUser.getPassword()).isEqualTo("hashed_password");
-        assertThat(savedUser.getRole()).isEqualTo(UserRole.USER);
-    }
-
-    @Test
-    @DisplayName("Should throw IllegalArgumentException when email already exists")
-    void createUser_EmailExists_ThrowsException() {
-        User user = new User(
-            "existing@example.com",
-            "Existing User",
-            "password123",
-            UserRole.USER
-        );
-        when(userRepository.existsByEmail(user.getEmail())).thenReturn(true);
-
-        CreateUserCommand command = new CreateUserCommand(
-            user.getEmail(),
-            user.getName(),
-            user.getPassword()
-        );
-
-        assertThatThrownBy(() -> userService.createUser(command))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Email is already in use");
-
-        verify(userRepository).existsByEmail(user.getEmail());
-        verify(userRepository, never()).save(any(User.class));
-    }
 
     @Test
     @DisplayName("Should find user by id")

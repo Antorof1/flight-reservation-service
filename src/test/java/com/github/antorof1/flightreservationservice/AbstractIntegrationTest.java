@@ -5,6 +5,8 @@ import com.github.antorof1.flightreservationservice.factory.UserTestDataFactory;
 import com.github.antorof1.flightreservationservice.flight.FlightRepository;
 import com.github.antorof1.flightreservationservice.reservation.ReservationRepository;
 import com.github.antorof1.flightreservationservice.seat.SeatRepository;
+import com.github.antorof1.flightreservationservice.security.JwtUtils;
+import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.web.reactive.server.WebTestClient;
+
+import java.util.Map;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -43,6 +47,9 @@ public abstract class AbstractIntegrationTest {
     @Autowired
     protected StringRedisTemplate redisTemplate;
 
+    @Autowired
+    protected JwtUtils jwtUtils;
+
     @AfterEach
     void clearDatabase() {
         reservationRepository.deleteAllInBatch();
@@ -54,5 +61,9 @@ public abstract class AbstractIntegrationTest {
             connection.serverCommands().flushAll();
             return null;
         });
+    }
+
+    protected String tokenFor(User user) {
+        return jwtUtils.generateToken(String.valueOf(user.getId()), Map.of("role", user.getRole().name()));
     }
 }

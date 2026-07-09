@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.reservation;
 
+import com.github.antorof1.flightreservationservice.AbstractControllerTest;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.flight.Flight;
 import com.github.antorof1.flightreservationservice.reservation.dto.CreateReservationRequest;
@@ -22,13 +23,16 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ReservationController.class)
-class ReservationControllerTest {
+class ReservationControllerTest extends AbstractControllerTest {
     private static final OffsetDateTime CREATED_AT = OffsetDateTime.parse("2026-01-01T10:00:00Z");
     private static final OffsetDateTime EXPIRES_AT = OffsetDateTime.parse("2026-01-01T10:10:00Z");
 
@@ -40,6 +44,9 @@ class ReservationControllerTest {
 
     @MockitoBean
     private ReservationService reservationService;
+
+    @MockitoBean(name = "reservationSecurity")
+    private ReservationSecurity reservationSecurity;
 
     private User user;
     private Seat seat;
@@ -88,8 +95,10 @@ class ReservationControllerTest {
     @DisplayName("GET /api/v1/reservations/{id} should return a reservation when it exists")
     void shouldReturnReservationById() throws Exception {
         when(reservationService.getReservationById(reservation.getId())).thenReturn(reservation);
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(true);
 
-        mockMvc.perform(get("/api/v1/reservations/" + reservation.getId()))
+        mockMvc.perform(get("/api/v1/reservations/" + reservation.getId())
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(reservation.getId()))
             .andExpect(jsonPath("$.userId").value(user.getId()))
@@ -100,8 +109,10 @@ class ReservationControllerTest {
     @DisplayName("GET /api/v1/reservations/{id} should return 404 when reservation not found")
     void shouldReturn404WhenReservationNotFound() throws Exception {
         when(reservationService.getReservationById(99L)).thenThrow(new ResourceNotFoundException("Reservation not found"));
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(true);
 
-        mockMvc.perform(get("/api/v1/reservations/99"))
+        mockMvc.perform(get("/api/v1/reservations/99")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message").value("Reservation not found"));
     }
@@ -109,11 +120,12 @@ class ReservationControllerTest {
     @Test
     @DisplayName("POST /api/v1/reservations should create a new reservation")
     void shouldCreateReservation() throws Exception {
-        CreateReservationRequest request = new CreateReservationRequest(user.getId(), seat.getId());
+        CreateReservationRequest request = new CreateReservationRequest(seat.getId());
 
         when(reservationService.createReservation(user.getId(), seat.getId())).thenReturn(reservation);
 
         mockMvc.perform(post("/api/v1/reservations")
+                .with(authentication(mockUserAuth()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -126,8 +138,10 @@ class ReservationControllerTest {
     void shouldConfirmReservation() throws Exception {
         reservation.setStatus(ReservationStatus.CONFIRMED);
         when(reservationService.confirmReservation(reservation.getId())).thenReturn(reservation);
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(true);
 
-        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/confirm"))
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/confirm")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
@@ -137,8 +151,10 @@ class ReservationControllerTest {
     void shouldCancelReservation() throws Exception {
         reservation.setStatus(ReservationStatus.CANCELLED);
         when(reservationService.cancelReservation(reservation.getId())).thenReturn(reservation);
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(true);
 
-        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/cancel"))
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/cancel")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CANCELLED"));
     }

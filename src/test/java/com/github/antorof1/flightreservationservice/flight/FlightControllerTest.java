@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.flight;
 
+import com.github.antorof1.flightreservationservice.AbstractControllerTest;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.flight.dto.CreateFlightRequest;
 import com.github.antorof1.flightreservationservice.seat.Seat;
@@ -24,13 +25,14 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(FlightController.class)
-class FlightControllerTest {
+class FlightControllerTest extends AbstractControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -53,6 +55,7 @@ class FlightControllerTest {
         when(flightService.getAllFlights(any(Pageable.class))).thenReturn(flightPage);
 
         mockMvc.perform(get("/api/v1/flights")
+                .with(authentication(mockUserAuth()))
                 .param("page", "0")
                 .param("size", "10")
                 .param("sort", "departureTime,asc"))
@@ -73,7 +76,8 @@ class FlightControllerTest {
 
         when(flightService.getFlightById(1L)).thenReturn(flight);
 
-        mockMvc.perform(get("/api/v1/flights/1"))
+        mockMvc.perform(get("/api/v1/flights/1")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.flightNumber").value("FL123"));
@@ -84,7 +88,8 @@ class FlightControllerTest {
     void shouldReturn404WhenFlightNotFound() throws Exception {
         when(flightService.getFlightById(99L)).thenThrow(new ResourceNotFoundException("Flight not found"));
 
-        mockMvc.perform(get("/api/v1/flights/99"))
+        mockMvc.perform(get("/api/v1/flights/99")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.message").value("Flight not found"));
     }
@@ -101,7 +106,8 @@ class FlightControllerTest {
 
         when(seatService.getSeatsByFlightId(1L, null)).thenReturn(List.of(seat));
 
-        mockMvc.perform(get("/api/v1/flights/1/seats"))
+        mockMvc.perform(get("/api/v1/flights/1/seats")
+                .with(authentication(mockUserAuth())))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].seatNumber").value("12A"));
@@ -119,6 +125,7 @@ class FlightControllerTest {
         when(flightService.createFlight(any(Flight.class))).thenReturn(savedFlight);
 
         mockMvc.perform(post("/api/v1/flights")
+                .with(authentication(mockAdminAuth()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
@@ -134,6 +141,7 @@ class FlightControllerTest {
         );
 
         mockMvc.perform(post("/api/v1/flights")
+                .with(authentication(mockUserAuth()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(invalidRequest)))
             .andExpect(status().isBadRequest())

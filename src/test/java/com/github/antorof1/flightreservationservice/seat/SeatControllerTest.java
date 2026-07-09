@@ -1,5 +1,6 @@
 package com.github.antorof1.flightreservationservice.seat;
 
+import com.github.antorof1.flightreservationservice.AbstractControllerTest;
 import com.github.antorof1.flightreservationservice.flight.Flight;
 import com.github.antorof1.flightreservationservice.seat.dto.SeatStatusUpdateRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -15,12 +16,13 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(SeatController.class)
-class SeatControllerTest {
+class SeatControllerTest extends AbstractControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
@@ -44,6 +46,7 @@ class SeatControllerTest {
         when(seatService.updateSeatStatus(1L, SeatStatus.HELD)).thenReturn(seat);
 
         mockMvc.perform(patch("/api/v1/seats/1/status")
+                .with(authentication(mockAdminAuth()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
