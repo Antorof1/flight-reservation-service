@@ -52,4 +52,16 @@ class SeatControllerTest extends AbstractControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("HELD"));
     }
+
+    @Test
+    @DisplayName("PATCH /api/v1/seats/{id}/status should return 403 when the caller is not an admin")
+    void shouldReturn403WhenNonAdminUpdatesSeatStatus() throws Exception {
+        SeatStatusUpdateRequest request = new SeatStatusUpdateRequest(SeatStatus.HELD);
+
+        mockMvc.perform(patch("/api/v1/seats/1/status")
+                .with(authentication(mockUserAuth()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isForbidden());
+    }
 }

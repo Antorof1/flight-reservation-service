@@ -158,4 +158,34 @@ class ReservationControllerTest extends AbstractControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CANCELLED"));
     }
+
+    @Test
+    @DisplayName("GET /api/v1/reservations/{id} should return 403 when the caller cannot access the reservation")
+    void shouldReturn403WhenCallerCannotAccessReservation() throws Exception {
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(false);
+
+        mockMvc.perform(get("/api/v1/reservations/" + reservation.getId())
+                .with(authentication(mockUserAuth())))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/reservations/{id}/confirm should return 403 when the caller cannot access the reservation")
+    void shouldReturn403WhenCallerCannotConfirmReservation() throws Exception {
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(false);
+
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/confirm")
+                .with(authentication(mockUserAuth())))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/reservations/{id}/cancel should return 403 when the caller cannot access the reservation")
+    void shouldReturn403WhenCallerCannotCancelReservation() throws Exception {
+        when(reservationSecurity.canAccessReservation(any(), anyLong())).thenReturn(false);
+
+        mockMvc.perform(put("/api/v1/reservations/" + reservation.getId() + "/cancel")
+                .with(authentication(mockUserAuth())))
+            .andExpect(status().isForbidden());
+    }
 }

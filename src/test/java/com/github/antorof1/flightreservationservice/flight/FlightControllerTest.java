@@ -148,4 +148,18 @@ class FlightControllerTest extends AbstractControllerTest {
             .andExpect(jsonPath("$.message").value("Validation failed"))
             .andExpect(jsonPath("$.details.length()").value(5));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/flights should return 403 when the caller is not an admin")
+    void shouldReturn403WhenNonAdminCreatesFlight() throws Exception {
+        CreateFlightRequest request = new CreateFlightRequest(
+            "FL123", "JFK", "LAX", OffsetDateTime.now(), OffsetDateTime.now().plusHours(5)
+        );
+
+        mockMvc.perform(post("/api/v1/flights")
+                .with(authentication(mockUserAuth()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isForbidden());
+    }
 }
