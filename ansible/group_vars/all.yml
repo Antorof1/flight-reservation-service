@@ -8,6 +8,7 @@ db_name: "{{ lookup('env', 'DB_NAME') | default('flight_reservation_db', true) }
 
 valkey_password: "{{ lookup('env', 'VALKEY_PASSWORD') }}"
 
+jwt_secret_key: "{{ lookup('env', 'JWT_SECRET_KEY') }}"
 spring_profiles_active: "{{ lookup('env', 'SPRING_PROFILES_ACTIVE') | default('prod', true) }}"
 
 app_image_tag: "{{ lookup('env', 'APP_IMAGE_TAG') | default('latest', true) }}"
