@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 log() {
-  echo "[$(date +'%d.%m.%Y %H:%M:%S')] $1"
+  echo "[$(date +'%d.%m.%Y %H:%M:%S')] $1" >&2
 }
 
 COMPOSE_FILE="{{ app_dir }}/docker-compose.yaml"
@@ -12,9 +12,11 @@ DB_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q db)"
 VALKEY_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q valkey)"
 APP_CONTAINER="$(docker compose -f "$COMPOSE_FILE" ps -q app)"
 
-DB_USER="{{ db_user }}"
-DB_NAME="{{ db_name }}"
+DB_USER="{{ postgres_user }}"
+DB_NAME="{{ postgres_db }}"
 VALKEY_PASSWORD="{{ valkey_password }}"
+SEED_ADMIN_EMAIL="{{ seed_admin_email }}"
+SEED_ADMIN_PASSWORD="{{ seed_admin_password }}"
 
 log "Dropping and recreating public database schema..."
 docker exec $DB_CONTAINER psql -U $DB_USER -d $DB_NAME -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
@@ -54,31 +56,59 @@ fi
 seed_post() {
   local endpoint=$1
   local data=$2
+  local bearer_token=${3:-}
   log "Seeding: $endpoint"
-  
+
+  local auth_header=()
+  if [[ -n "$bearer_token" ]]; then
+    auth_header=(--header="Authorization: Bearer $bearer_token")
+  fi
+
   local response
   set +e
   response=$(docker exec -i $APP_CONTAINER wget -S -O- \
     --post-data="$data" \
     --header="Content-Type: application/json" \
+    "${auth_header[@]}" \
     "http://localhost:8080/api/v1$endpoint" 2>&1)
   set -e
 
   local status_code
-  status_code=$(echo "$response" | grep -oP 'HTTP/[0-9.]+\s+\K[0-9]{3}' || true)
+  status_code=$(echo "$response" | grep -oP 'HTTP/[0-9.]+\s+\K[0-9]{3}' | tail -n1 || true)
+  status_code="${status_code:-000}"
 
   if [[ "$status_code" -lt 200 || "$status_code" -gt 299 ]]; then
     log "Error: Seeding failed for $endpoint with HTTP status $status_code"
     log "Response details: $response"
     return 1
   fi
+
+  echo "$response"
 }
+
+log "Authenticating as seed admin..."
+LOGIN_RESPONSE=$(seed_post "/auth/login" "{
+  \"email\": \"$SEED_ADMIN_EMAIL\",
+  \"password\": \"$SEED_ADMIN_PASSWORD\"
+}") || {
+  log "Error: Could not authenticate as seed admin"
+  exit 1
+}
+
+ADMIN_TOKEN=$(echo "$LOGIN_RESPONSE" | grep -oP '"token"\s*:\s*"\K[^"]+')
+
+if [[ -z "$ADMIN_TOKEN" ]]; then
+  log "Error: Could not extract admin token from login response"
+  log "Response details: $LOGIN_RESPONSE"
+  exit 1
+fi
 
 log "Executing seeding scripts..."
 
-seed_post "/users" '{
+seed_post "/auth/register" '{
   "email": "john.doe@example.com",
-  "name" : "John Doe"
+  "name": "John Doe",
+  "password": "DemoPass123!"
 }'
 
 seed_post "/flights" '{
@@ -87,6 +117,6 @@ seed_post "/flights" '{
   "arrivalAirport": "WAW",
   "departureTime": "2026-06-03T10:00:00Z",
   "arrivalTime": "2026-06-03T14:00:00Z"
-}'
+}' "$ADMIN_TOKEN"
 
 log "Database reset and seeding completed successfully"
