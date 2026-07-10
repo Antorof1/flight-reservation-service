@@ -233,7 +233,7 @@ Configure these as **Secrets** to protect sensitive credentials and keys.
 |:-------------------------|:------------------------------------------------------------------|
 | `VPS_SSH_KEY`            | Private SSH key used to authenticate with the VPS host.           |
 | `VPS_HOST`               | The public IP address or domain of the target VPS.                |
-| `DB_PASSWORD`            | Administrative password for the PostgreSQL database.              |
+| `POSTGRES_PASSWORD`      | Administrative password for the PostgreSQL database.              |
 | `VALKEY_PASSWORD`        | Authentication password for the Valkey cache.                     |
 | `GRAFANA_ADMIN_PASSWORD` | Admin password for the Grafana dashboard.                         |
 | `TLS_CERT`               | *Optional* Explicit TLS certificate block (PEM format) for Caddy. |
@@ -249,8 +249,8 @@ Configure these as **Variables** for general application settings.
 | `DOMAIN`                 | Production domain name configured in Caddy (defaults to `localhost`).                                                              |
 | `SPRING_PROFILES_ACTIVE` | Active Spring Boot profiles (defaults to `prod`).                                                                                  |
 | `APP_IMAGE_TAG`          | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                                    |
-| `DB_USER`                | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
-| `DB_NAME`                | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
+| `POSTGRES_USER`          | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
+| `POSTGRES_DB`            | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
 | `GRAFANA_ADMIN_USER`     | Admin username for the Grafana dashboard (defaults to `admin`).                                                                    |
 | `TRUSTED_PROXIES`        | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping.                |
 | `IS_DEMO`                | *Optional* Boolean flag to enable demo-specific environment behaviors, such as daily database seeding/reset (defaults to `false`). |
