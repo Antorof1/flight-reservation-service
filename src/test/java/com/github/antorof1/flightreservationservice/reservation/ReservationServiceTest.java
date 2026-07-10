@@ -179,6 +179,29 @@ class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw InvalidReservationStateException when cancelling an already-expired reservation")
+    void cancelReservation_AlreadyExpired_ThrowsException() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation(
+            user,
+            seat,
+            ReservationStatus.EXPIRED,
+            UUID.randomUUID(),
+            OffsetDateTime.now().minusMinutes(20),
+            OffsetDateTime.now().minusMinutes(10)
+        );
+        reservation.setId(reservationId);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        assertThatThrownBy(() -> reservationService.cancelReservation(reservationId))
+            .isInstanceOf(InvalidReservationStateException.class)
+            .hasMessageContaining("Reservation has already expired");
+
+        verify(seatService, never()).updateSeatStatus(anyLong(), any());
+    }
+
+    @Test
     @DisplayName("Should cleanup expired reservation and release seat")
     void cleanUpExpiredReservation_ReleasesSeat() {
         seat.setStatus(SeatStatus.HELD);
@@ -187,7 +210,7 @@ class ReservationServiceTest {
 
         reservationService.cleanUpExpiredReservation(reservation);
 
-        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.EXPIRED);
         verify(seatService).updateSeatStatus(seat.getId(), SeatStatus.AVAILABLE);
         verify(reservationRepository).save(reservation);
     }

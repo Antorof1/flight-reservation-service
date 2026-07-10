@@ -119,6 +119,10 @@ public class ReservationService {
             throw new InvalidReservationStateException("Reservation is already cancelled");
         }
 
+        if (reservation.getStatus() == ReservationStatus.EXPIRED) {
+            throw new InvalidReservationStateException("Reservation has already expired");
+        }
+
         if (reservation.getStatus() == ReservationStatus.PENDING &&
             reservation.getExpiresAt().isBefore(OffsetDateTime.now())) {
             throw new InvalidReservationStateException("Reservation is expired");
@@ -151,7 +155,7 @@ public class ReservationService {
 
     @Transactional
     public void cleanUpExpiredReservation(Reservation reservation) {
-        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setStatus(ReservationStatus.EXPIRED);
 
         Seat seat = reservation.getSeat();
 
