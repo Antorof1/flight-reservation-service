@@ -123,6 +123,12 @@ public class ReservationService {
             throw new InvalidReservationStateException("Reservation has already expired");
         }
 
+        if (reservation.getStatus() != ReservationStatus.PENDING
+            && reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new InvalidReservationStateException(
+                "Reservation cannot be cancelled because it is in status: " + reservation.getStatus());
+        }
+
         if (reservation.getStatus() == ReservationStatus.PENDING &&
             reservation.getExpiresAt().isBefore(OffsetDateTime.now())) {
             throw new InvalidReservationStateException("Reservation is expired");

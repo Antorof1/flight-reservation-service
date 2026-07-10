@@ -179,6 +179,29 @@ class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("Should allow cancelling a confirmed reservation")
+    void cancelReservation_ConfirmedReservation_Success() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation(
+            user,
+            seat,
+            ReservationStatus.CONFIRMED,
+            UUID.randomUUID(),
+            OffsetDateTime.now().minusMinutes(20),
+            OffsetDateTime.now().minusMinutes(10)
+        );
+        reservation.setId(reservationId);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        Reservation cancelled = reservationService.cancelReservation(reservationId);
+
+        assertThat(cancelled.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
+        verify(seatService).updateSeatStatus(seat.getId(), SeatStatus.AVAILABLE);
+        verify(redisTemplate, never()).delete(anyString());
+    }
+
+    @Test
     @DisplayName("Should throw InvalidReservationStateException when cancelling an already-expired reservation")
     void cancelReservation_AlreadyExpired_ThrowsException() {
         Long reservationId = 1L;
