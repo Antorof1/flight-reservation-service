@@ -19,6 +19,10 @@ UI.
 * **Interactive Swagger UI:** [https://flight.antonbazykin.com/swagger-ui/index.html](https://flight.antonbazykin.com/swagger-ui/index.html)
 * **OpenAPI Specification:** [https://flight.antonbazykin.com/v3/api-docs](https://flight.antonbazykin.com/v3/api-docs)
 
+**Demo admin account:** `admin@example.com` / `DemoAdmin2026!` Use this to try admin-only endpoints (creating
+flights, updating seat status) via Swagger. The database resets daily (see below), so don't rely on anything you
+create surviving past 00:00 UTC.
+
 #### Infrastructure Stack
 
 - **Cloud Provider:** Hosted on an **Oracle Cloud VPS** (ARM64).
