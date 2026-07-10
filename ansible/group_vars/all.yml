@@ -2,9 +2,9 @@
 app_dir: "/opt/flight-reservation-service"
 is_demo: "{{ lookup('env', 'IS_DEMO') | default('false', true) | bool }}"
 
-db_user: "{{ lookup('env', 'DB_USER') | default('db_user', true) }}"
-db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
-db_name: "{{ lookup('env', 'DB_NAME') | default('flight_reservation_db', true) }}"
+postgres_user: "{{ lookup('env', 'POSTGRES_USER') | default('db_user', true) }}"
+postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+postgres_db: "{{ lookup('env', 'POSTGRES_DB') | default('flight_reservation_db', true) }}"
 
 valkey_password: "{{ lookup('env', 'VALKEY_PASSWORD') }}"
 
