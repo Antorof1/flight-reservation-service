@@ -85,6 +85,8 @@ jobs:
         DB_NAME: ${{ vars.DB_NAME }}
         VALKEY_PASSWORD: ${{ secrets.VALKEY_PASSWORD }}
         JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+        SEED_ADMIN_EMAIL: ${{ vars.SEED_ADMIN_EMAIL }}
+        SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
         SPRING_PROFILES_ACTIVE: ${{ vars.SPRING_PROFILES_ACTIVE }}
         APP_IMAGE_TAG: ${{ vars.APP_IMAGE_TAG }}
         DOMAIN: ${{ vars.DOMAIN }}
