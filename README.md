@@ -45,6 +45,8 @@ To ensure the demo remains performant and accessible to everyone, the environmen
 
 ## Features
 
+- **Authentication & Authorization:** Stateless JWT-based authentication with role-based access control (`USER` /
+  `ADMIN`) protecting reservation ownership and admin-only operations.
 - **Flight Management:** Create and retrieve flight details including schedules and airports.
 - **Seat Management:** Manage seat availability, pricing and classes (Economy, Business, First Class).
 - **User Management:** Register users and track their reservation history.
@@ -77,6 +79,7 @@ To ensure the demo remains performant and accessible to everyone, the environmen
 - **Build Tool:** Maven
 - **Infrastructure:** Docker & Docker Compose (Dev & Prod)
 - **Testing:** JUnit 5, Mockito, Testcontainers, WebTestClient
+- **Security:** Spring Security, JJWT (JSON Web Tokens), BCrypt password hashing
 - **CI/CD:** GitHub Actions & GitHub Container Registry
 - **Reverse Proxy:** Caddy
 - **Monitoring:** Prometheus, Grafana
@@ -126,6 +129,9 @@ The application relies on the following key environment variables:
 | `POSTGRES_PASSWORD`      | PostgreSQL administrative password               | `db_password`           |
 | `POSTGRES_DB`            | Name of the primary database                     | `flight_reservation_db` |
 | `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance           | `valkey_password`       |
+| `JWT_SECRET_KEY`         | Base64-encoded secret used to sign/verify JWTs   | `base64_32bytes_secret` |
+| `SEED_ADMIN_EMAIL`       | Email for the seeded demo admin account          | `admin@demo.local`      |
+| `SEED_ADMIN_PASSWORD`    | Password for the seeded demo admin account       | -                       |
 | `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)                    | `prod`                  |
 | `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR               | `latest`                | 
 | `DOMAIN`                 | Domain name configured in Caddy                  | `localhost`             |
@@ -133,7 +139,8 @@ The application relies on the following key environment variables:
 | `GRAFANA_ADMIN_USER`     | Grafana adminstrative username                   | `admin`                 |
 | `GRAFANA_ADMIN_PASSWORD` | Grafana adminstrative password                   | `admin`                 |
 
-*Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` in the `.env` file.*
+*Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` and `JWT_SECRET_KEY` in the `.env` file. If
+`SEED_ADMIN_PASSWORD` is left blank, no demo admin account is created.*
 
 ### 2. Deploy with Docker Compose
 
@@ -162,21 +169,48 @@ Once the application is running, you can access the interactive API documentatio
 
 ### Key Endpoints
 
-| Resource         | Method  | Endpoint                            | Description                                      |
-|:-----------------|:--------|:------------------------------------|:-------------------------------------------------|
-| **Flights**      | `GET`   | `/api/v1/flights`                   | List all flights with pagination                 |
-|                  | `GET`   | `/api/v1/flights/{id}`              | Get flight details by ID                         |
-|                  | `GET`   | `/api/v1/flights/{id}/seats`        | List seats for a flight (optional status filter) |
-|                  | `POST`  | `/api/v1/flights`                   | Create a new flight                              |
-| **Seats**        | `PATCH` | `/api/v1/seats/{id}/status`         | Update seat status                               |
-| **Reservations** | `GET`   | `/api/v1/reservations/{id}`         | Get reservation details by ID                    |
-|                  | `POST`  | `/api/v1/reservations`              | Create a temporary hold                          |
-|                  | `PUT`   | `/api/v1/reservations/{id}/confirm` | Confirm a reservation                            |
-|                  | `PUT`   | `/api/v1/reservations/{id}/cancel`  | Cancel a reservation                             |
-| **Users**        | `GET`   | `/api/v1/users`                     | Find user by email                               |
-|                  | `GET`   | `/api/v1/users/{id}`                | Get user profile by ID                           |
-|                  | `GET`   | `/api/v1/users/{id}/reservations`   | Get user reservation history with pagination     |
-|                  | `POST`  | `/api/v1/users`                     | Register a new user                              |
+| Resource         | Method  | Endpoint                            | Access           | Description                                        |
+|:-----------------|:--------|:------------------------------------|:-----------------|:---------------------------------------------------|
+| **Auth**         | `POST`  | `/api/v1/auth/register`             | Public           | Register a new user and receive a JWT              |
+|                  | `POST`  | `/api/v1/auth/login`                | Public           | Authenticate with email/password and receive a JWT |
+| **Flights**      | `GET`   | `/api/v1/flights`                   | Public           | List all flights with pagination                   |
+|                  | `GET`   | `/api/v1/flights/{id}`              | Public           | Get flight details by ID                           |
+|                  | `GET`   | `/api/v1/flights/{id}/seats`        | Public           | List seats for a flight (optional status filter)   |
+|                  | `POST`  | `/api/v1/flights`                   | `ADMIN`          | Create a new flight                                |
+| **Seats**        | `PATCH` | `/api/v1/seats/{id}/status`         | `ADMIN`          | Update seat status                                 |
+| **Reservations** | `GET`   | `/api/v1/reservations/{id}`         | Owner or `ADMIN` | Get reservation details by ID                      |
+|                  | `POST`  | `/api/v1/reservations`              | Authenticated    | Create a temporary hold                            |
+|                  | `PUT`   | `/api/v1/reservations/{id}/confirm` | Owner or `ADMIN` | Confirm a reservation                              |
+|                  | `PUT`   | `/api/v1/reservations/{id}/cancel`  | Owner or `ADMIN` | Cancel a reservation                               |
+| **Users**        | `GET`   | `/api/v1/users/reservations`        | Authenticated    | Get current user's reservation history             |
+
+### Authentication
+
+Authentication is handled via stateless **JSON Web Tokens (JWT)**. Register or log in to obtain a token, then pass it on
+subsequent requests using the `Authorization: Bearer <token>` header.
+
+```bash
+# Register a new user (or use POST /api/v1/auth/login for existing users)
+curl -X POST https://flight.antonbazykin.com/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email": "jane.doe@example.com", "name": "Jane Doe", "password": "supersecret"}'
+
+# Response: { "token": "<jwt>", "email": "jane.doe@example.com", "name": "Jane Doe" }
+
+# Use the token to call a protected endpoint
+curl https://flight.antonbazykin.com/api/v1/reservations/1 \
+  -H "Authorization: Bearer <jwt>"
+```
+
+Each token embeds the user's ID (as the subject) and role (`USER` or `ADMIN`), which drives method-level authorization:
+
+- **Public endpoints:** Auth endpoints, `GET /api/v1/flights/**` and the Swagger/OpenAPI docs are accessible without a
+  token.
+- **Authenticated endpoints:** All other endpoints require a valid JWT.
+- **Admin-only endpoints:** Creating flights and updating seat status require the `ADMIN` role.
+- **Ownership checks:** Reservation endpoints are restricted to the reservation's owner or an `ADMIN`, enforced via a
+  `ReservationSecurity` `@PreAuthorize` expression.
+- Unauthenticated or invalid-token requests receive a consistent JSON `401 Unauthorized` response.
 
 ### Global Error Handling
 
@@ -235,6 +269,8 @@ Configure these as **Secrets** to protect sensitive credentials and keys.
 | `VPS_HOST`               | The public IP address or domain of the target VPS.                |
 | `POSTGRES_PASSWORD`      | Administrative password for the PostgreSQL database.              |
 | `VALKEY_PASSWORD`        | Authentication password for the Valkey cache.                     |
+| `JWT_SECRET_KEY`         | Base64-encoded secret used to sign/verify JWTs.                   |
+| `SEED_ADMIN_PASSWORD`    | Password for the seeded demo admin account.                       |
 | `GRAFANA_ADMIN_PASSWORD` | Admin password for the Grafana dashboard.                         |
 | `TLS_CERT`               | *Optional* Explicit TLS certificate block (PEM format) for Caddy. |
 | `TLS_KEY`                | *Optional* Matching private key block for the TLS certificate.    |
@@ -251,6 +287,7 @@ Configure these as **Variables** for general application settings.
 | `APP_IMAGE_TAG`          | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                                    |
 | `POSTGRES_USER`          | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
 | `POSTGRES_DB`            | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
+| `SEED_ADMIN_EMAIL`       | Email for the seeded demo admin account (defaults to `admin@demo.local`).                                                          |
 | `GRAFANA_ADMIN_USER`     | Admin username for the Grafana dashboard (defaults to `admin`).                                                                    |
 | `TRUSTED_PROXIES`        | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping.                |
 | `IS_DEMO`                | *Optional* Boolean flag to enable demo-specific environment behaviors, such as daily database seeding/reset (defaults to `false`). |
