@@ -28,6 +28,21 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:4.3-alpine
+    container_name: flight-reservation-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     image: ghcr.io/antorof1/flight-reservation-service:${APP_IMAGE_TAG:-latest}
     container_name: flight-reservation-app
@@ -39,6 +54,10 @@ services:
       SPRING_DATA_REDIS_HOST: valkey
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: ${VALKEY_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
@@ -48,6 +67,8 @@ services:
       db:
         condition: service_healthy
       valkey:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
 
   caddy:
@@ -103,6 +124,7 @@ services:
 volumes:
   postgres_data:
   valkey_data:
+  rabbitmq_data:
   caddy_data:
   caddy_config:
   grafana_data:

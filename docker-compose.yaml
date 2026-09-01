@@ -13,3 +13,7 @@ services:
       - '6379'
     labels:
       org.springframework.boot.service-connection: redis
+  rabbitmq:
+    image: 'rabbitmq:4.3-alpine'
+    ports:
+      - '5672'
