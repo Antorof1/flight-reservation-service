@@ -1,0 +1,55 @@
+package com.github.antorof1.flightreservationservice.notification;
+
+import com.github.antorof1.flightreservationservice.notification.exception.PermanentEmailException;
+import com.github.antorof1.flightreservationservice.notification.exception.TransientEmailException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.util.Locale;
+
+@Component
+public class NotificationService {
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
+
+    private final EmailSender emailSender;
+    private final NotificationProperties properties;
+
+    public NotificationService(EmailSender emailSender, NotificationProperties properties) {
+        this.emailSender = emailSender;
+        this.properties = properties;
+    }
+
+    private boolean permits(String to) {
+        return switch (properties.mode()) {
+            case OFF -> false;
+            case ALL -> true;
+            case ALLOWLIST -> {
+                String normalized = to.trim().toLowerCase(Locale.ROOT);
+                yield properties.allowList().contains(normalized);
+            }
+        };
+    }
+
+    public void sendEmail(EmailMessage message) {
+        if (!permits(message.to())) {
+            log.info(
+                "Suppressed email '{}' to {} (mode={})",
+                message.subject(),
+                message.to(),
+                properties.mode()
+            );
+            return;
+        }
+
+        try {
+            emailSender.send(message);
+        } catch (PermanentEmailException e) {
+            log.error("Permanently failed to send email '{}' to {}: {}",
+                message.subject(), message.to(), e.getMessage(), e);
+        } catch (TransientEmailException e) {
+            log.error("Giving up on email '{}' to {} after {} retries: {}",
+                message.subject(), message.to(), properties.retry().maxRetries(), e.getMessage(), e);
+        }
+    }
+}

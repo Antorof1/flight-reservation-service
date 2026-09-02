@@ -2,11 +2,13 @@ package com.github.antorof1.flightreservationservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.resilience.annotation.EnableResilientMethods;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
+@ConfigurationPropertiesScan
 @EnableResilientMethods
 public class FlightReservationServiceApplication {
 
