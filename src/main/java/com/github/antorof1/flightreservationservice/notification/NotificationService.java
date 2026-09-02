@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Locale;
-
 @Component
 public class NotificationService {
     private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
@@ -20,19 +18,8 @@ public class NotificationService {
         this.properties = properties;
     }
 
-    private boolean permits(String to) {
-        return switch (properties.mode()) {
-            case OFF -> false;
-            case ALL -> true;
-            case ALLOWLIST -> {
-                String normalized = to.trim().toLowerCase(Locale.ROOT);
-                yield properties.allowList().contains(normalized);
-            }
-        };
-    }
-
     public void sendEmail(EmailMessage message) {
-        if (!permits(message.to())) {
+        if (!properties.permits(message.to())) {
             log.info(
                 "Suppressed email '{}' to {} (mode={})",
                 message.subject(),

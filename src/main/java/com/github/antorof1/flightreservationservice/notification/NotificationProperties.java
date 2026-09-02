@@ -20,6 +20,14 @@ public record NotificationProperties(
             .collect(Collectors.toUnmodifiableSet());
     }
 
+    public boolean permits(String recipient) {
+        return switch (mode) {
+            case OFF -> false;
+            case ALL -> true;
+            case ALLOWLIST -> allowList.contains(recipient.trim().toLowerCase(Locale.ROOT));
+        };
+    }
+
     public record Retry(
         @DefaultValue("2") int maxRetries,
         @DefaultValue("2s") Duration delay
