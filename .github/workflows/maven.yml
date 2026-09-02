@@ -82,7 +82,7 @@ jobs:
         env:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ vars.POSGRES_DB }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           VALKEY_PASSWORD: ${{ secrets.VALKEY_PASSWORD }}
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           SEED_ADMIN_EMAIL: ${{ vars.SEED_ADMIN_EMAIL }}
