@@ -9,7 +9,6 @@ import com.resend.services.emails.model.CreateEmailOptions;
 import com.resend.services.emails.model.CreateEmailResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -34,9 +33,9 @@ public class ResendEmailSender implements EmailSender {
     private final Resend resend;
     private final String fromEmail;
 
-    public ResendEmailSender(Resend resend, @Value("${resend.from-email}") String fromEmail) {
+    public ResendEmailSender(Resend resend, ResendProperties properties) {
         this.resend = resend;
-        this.fromEmail = fromEmail;
+        this.fromEmail = properties.fromEmail();
     }
 
     private static EmailDeliveryException classify(ResendException e, String to) {

@@ -49,7 +49,7 @@ class ResendEmailSenderTest {
     void setUp() {
         when(resend.emails()).thenReturn(emails);
 
-        emailSender = new ResendEmailSender(resend, FROM_EMAIL);
+        emailSender = new ResendEmailSender(resend, new ResendProperties("test-api-key", FROM_EMAIL));
     }
 
     @Test

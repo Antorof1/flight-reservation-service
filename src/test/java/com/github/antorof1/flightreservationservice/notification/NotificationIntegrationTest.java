@@ -30,7 +30,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@TestPropertySource(properties = "app.notifications.mode=ALL")
+@TestPropertySource(properties = {
+    "app.notifications.mode=ALL",
+    "resend.api-key=test-api-key",
+    "resend.from-email=no-reply@test.example"
+})
 class NotificationIntegrationTest extends AbstractIntegrationTest {
     private static final String FLIGHT_NUMBER = "FL-123";
     private static final String PASSENGER_EMAIL = "john.doe@example.com";
