@@ -24,6 +24,10 @@ Once the application is running, you can access the interactive API documentatio
 |                  | `PUT`   | `/api/v1/reservations/{id}/cancel`  | Owner or `ADMIN` | Cancel a reservation                               |
 | **Users**        | `GET`   | `/api/v1/users/reservations`        | Authenticated    | Get current user's reservation history             |
 
+Confirming or cancelling a reservation also emails the passenger. The email is dispatched asynchronously after the
+transaction commits, so it does not affect the response status or latency, see the
+[Notifications & Messaging guide](notifications.md).
+
 ## Authentication
 
 Authentication is handled via stateless **JSON Web Tokens (JWT)**. Register or log in to obtain a token, then pass it on

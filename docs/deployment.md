@@ -14,22 +14,28 @@ cp .env.example .env
 
 The application relies on the following key environment variables:
 
-| Variable                 | Description                                                    | Default / Example Value |
-|:-------------------------|:---------------------------------------------------------------|:------------------------|
-| `POSTGRES_USER`          | PostgreSQL administrative username                             | `db_user`               |
-| `POSTGRES_PASSWORD`      | PostgreSQL administrative password                             | `db_password`           |
-| `POSTGRES_DB`            | Name of the primary database                                   | `flight_reservation_db` |
-| `VALKEY_PASSWORD`        | Password for the Valkey/Redis instance                         | `valkey_password`       |
-| `JWT_SECRET_KEY`         | Base64-encoded secret used to sign/verify JWTs                 | `base64_32bytes_secret` |
-| `SEED_ADMIN_EMAIL`       | Email for the seeded demo admin account                        | `admin@demo.local`      |
-| `SEED_ADMIN_PASSWORD`    | Password for the seeded demo admin account                     | -                       |
-| `SPRING_PROFILES_ACTIVE` | Active Spring boot profile(s)                                  | `prod`                  |
-| `APP_IMAGE_TAG`          | Docker image tag to pull from GHCR                             | `latest`                | 
-| `COMPOSE_PROFILES`       | Optional Compose profiles to enable                            | `proxy,observability`   |
-| `DOMAIN`                 | Domain name configured in Caddy                                | `localhost`             |
-| `TRUSTED_PROXIES`        | Space-separated list of trusted proxy IPs (CIDR)               | `127.0.0.1/32`          |
-| `GRAFANA_ADMIN_USER`     | Grafana adminstrative username                                 | `admin`                 |
-| `GRAFANA_ADMIN_PASSWORD` | Grafana adminstrative password                                 | `admin`                 |
+| Variable                  | Description                                                 | Default / Example Value |
+|:--------------------------|:------------------------------------------------------------|:------------------------|
+| `POSTGRES_USER`           | PostgreSQL administrative username                          | `db_user`               |
+| `POSTGRES_PASSWORD`       | PostgreSQL administrative password                          | `db_password`           |
+| `POSTGRES_DB`             | Name of the primary database                                | `flight_reservation_db` |
+| `VALKEY_PASSWORD`         | Password for the Valkey/Redis instance                      | `valkey_password`       |
+| `RABBITMQ_USER`           | RabbitMQ username, shared by the broker and the app         | `rabbitmq_user`         |
+| `RABBITMQ_PASSWORD`       | RabbitMQ password, shared by the broker and the app         | `rabbitmq_password`     |
+| `JWT_SECRET_KEY`          | Base64-encoded secret used to sign/verify JWTs              | `base64_32bytes_secret` |
+| `RESEND_API_KEY`          | Resend API key, needed unless `NOTIFICATIONS_MODE` is `OFF` | `re_123`                |
+| `RESEND_FROM_EMAIL`       | Sender address, needed unless `NOTIFICATIONS_MODE` is `OFF` | `example@example.com`   |
+| `NOTIFICATIONS_MODE`      | Email delivery mode: `OFF`, `ALLOWLIST` or `ALL`            | `OFF`                   |
+| `NOTIFICATIONS_ALLOWLIST` | Comma-separated recipients allowed in `ALLOWLIST` mode      | `example@example.com`   |
+| `SEED_ADMIN_EMAIL`        | Email for the seeded demo admin account                     | `admin@demo.local`      |
+| `SEED_ADMIN_PASSWORD`     | Password for the seeded demo admin account                  | -                       |
+| `SPRING_PROFILES_ACTIVE`  | Active Spring boot profile(s)                               | `prod`                  |
+| `APP_IMAGE_TAG`           | Docker image tag to pull from GHCR                          | `latest`                | 
+| `COMPOSE_PROFILES`        | Optional Compose profiles to enable                         | `proxy,observability`   |
+| `DOMAIN`                  | Domain name configured in Caddy                             | `localhost`             |
+| `TRUSTED_PROXIES`         | Space-separated list of trusted proxy IPs (CIDR)            | `127.0.0.1/32`          |
+| `GRAFANA_ADMIN_USER`      | Grafana adminstrative username                              | `admin`                 |
+| `GRAFANA_ADMIN_PASSWORD`  | Grafana adminstrative password                              | `admin`                 |
 
 *Note: Ensure you update sensitive credentials like `POSTGRES_PASSWORD` and `JWT_SECRET_KEY` in the `.env` file. If
 `SEED_ADMIN_PASSWORD` is left blank, no demo admin account is created.*
@@ -48,7 +54,7 @@ docker compose -f docker-compose-prod.yaml --env-file .env up -d
 
 The Caddy reverse proxy and the Prometheus/Grafana observability stack are optional and gated behind the `proxy` and
 `observability` Compose profiles respectively. Enable them via the `COMPOSE_PROFILES` variable in `.env`, or omit it
-to run only the core `app`, `db` and `valkey` services.
+to run only the core `app`, `db`, `valkey` and `rabbitmq` services.
 
 For local development with a locally built image instead of the GHCR one, layer the local override file on top:
 

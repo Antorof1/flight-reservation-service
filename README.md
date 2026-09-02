@@ -35,7 +35,11 @@ flights, updating seat status) via Swagger. The database resets daily (see the
     - **Confirmation:** Finalize reservations after payment/processing.
     - **Cancellation:** Release seats back to availability.
     - **Automated Cleanup:** Scheduled background task (Sweeper) to release expired holds.
-- **Error Handling:** Structured global exception handling with consistent error responses.
+- **Event-Driven Notifications:** Confirmations and cancellations publish events to RabbitMQ after the transaction
+  commits; a listener emails the passenger via Resend, with delivery-mode gating (`OFF` / `ALLOWLIST` / `ALL`) and
+  automatic retries for transient provider failures.
+- **Error Handling:** Structured global exception handling with consistent error responses and server-side logging of
+  unhandled exceptions.
 - **Continuous Integration & Delivery:** Automated testing, containerization and deployment to VPS via GitHub Actions,
   publishing production-ready images to GitHub Container Registry.
 - **Production Ready:** Optimized Docker configuration featuring a Caddy reverse proxy, pre-built images, and
@@ -54,6 +58,8 @@ flights, updating seat status) via Swagger. The database resets daily (see the
 - **Framework:** Spring Boot 4.0.6
 - **Database:** PostgreSQL (Primary)
 - **Caching/Locking:** Valkey (Redis-compatible)
+- **Messaging:** RabbitMQ (Spring AMQP)
+- **Email Delivery:** Resend
 - **Migrations:** Flyway
 - **Documentation:** SpringDoc OpenAPI
 - **Build Tool:** Maven
@@ -68,12 +74,12 @@ flights, updating seat status) via Swagger. The database resets daily (see the
 
 ## Quick Start
 
-Requires **Java 21** or higher, plus **Docker** and **Docker Compose** for the containerized stack. Maven is optional —
-use the bundled `./mvnw` wrapper.
+Requires **Java 21** or higher, plus **Docker** and **Docker Compose** for the containerized stack. 
 
 ```bash
 git clone https://github.com/antorof1/flight-reservation-service.git
 cd flight-reservation-service
+export JWT_SECRET_KEY=$(openssl rand -base64 32)
 ./mvnw spring-boot:run
 ```
 
@@ -88,6 +94,7 @@ production setup see the [Deployment guide](docs/deployment.md).
 |:---------------------------------------------|:-----------------------------------------------------------|
 | [Architecture](docs/architecture.md)         | Domain modules, concurrency control and seat locking       |
 | [API Reference](docs/api-reference.md)       | Endpoint catalogue, JWT auth, error payload schema         |
+| [Notifications](docs/notifications.md)       | RabbitMQ topology, email delivery modes, retry semantics   |
 | [Development](docs/development.md)           | Prerequisites, running locally, test suite                 |
 | [Deployment](docs/deployment.md)             | Docker Compose, environment variables, Caddy configuration |
 | [CI/CD](docs/ci-cd.md)                       | GitHub Actions workflow, repository secrets and variables  |

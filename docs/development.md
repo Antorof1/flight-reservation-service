@@ -17,7 +17,13 @@ git clone https://github.com/antorof1/flight-reservation-service.git
 cd flight-reservation-service
 ```
 
-### 2. Run the Application
+### 2. Provide the required environment variables
+
+```bash
+export JWT_SECRET_KEY=$(openssl rand -base64 32)
+```
+
+### 3. Run the Application
 
 ```bash
 ./mvnw spring-boot:run
@@ -33,8 +39,9 @@ To run the full containerized stack instead, see the [Deployment guide](deployme
 The project emphasizes high quality through a comprehensive testing strategy:
 
 - **Unit Tests:** Isolated testing of business logic in services and controllers using JUnit 5 and Mockito.
-- **Integration Tests:** End-to-end validation of API endpoints and database interactions using **Testcontainers** to
-  spin up real PostgreSQL and Redis/Valkey instances, ensuring tests run in an environment identical to production.
+- **Integration Tests:** End-to-end validation of API endpoints, database interactions and the event-driven notification
+  pipeline using **Testcontainers** to spin up real PostgreSQL, Redis/Valkey and RabbitMQ instances, ensuring tests run
+  in an environment identical to production.
 
 Run the full test suite:
 

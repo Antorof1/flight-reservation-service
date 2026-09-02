@@ -26,7 +26,9 @@ Configure these as **Secrets** to protect sensitive credentials and keys.
 | `VPS_HOST`               | The public IP address or domain of the target VPS.                |
 | `POSTGRES_PASSWORD`      | Administrative password for the PostgreSQL database.              |
 | `VALKEY_PASSWORD`        | Authentication password for the Valkey cache.                     |
+| `RABBITMQ_PASSWORD`      | Password for the RabbitMQ broker and the app's AMQP connection.   |
 | `JWT_SECRET_KEY`         | Base64-encoded secret used to sign/verify JWTs.                   |
+| `RESEND_API_KEY`         | Resend API key. Required unless `NOTIFICATIONS_MODE` is `OFF`.    |
 | `SEED_ADMIN_PASSWORD`    | Password for the seeded demo admin account.                       |
 | `GRAFANA_ADMIN_PASSWORD` | Admin password for the Grafana dashboard.                         |
 | `TLS_CERT`               | *Optional* Explicit TLS certificate block (PEM format) for Caddy. |
@@ -36,15 +38,19 @@ Configure these as **Secrets** to protect sensitive credentials and keys.
 
 Configure these as **Variables** for general application settings.
 
-| Variable Name            | Description                                                                                                                        |
-|:-------------------------|:-----------------------------------------------------------------------------------------------------------------------------------|
-| `VPS_USERNAME`           | SSH system user on the target VPS.                                                                                                 |
-| `DOMAIN`                 | Production domain name configured in Caddy (defaults to `localhost`).                                                              |
-| `SPRING_PROFILES_ACTIVE` | Active Spring Boot profiles (defaults to `prod`).                                                                                  |
-| `APP_IMAGE_TAG`          | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                                    |
-| `POSTGRES_USER`          | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
-| `POSTGRES_DB`            | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
-| `SEED_ADMIN_EMAIL`       | Email for the seeded demo admin account (defaults to `admin@demo.local`).                                                          |
-| `GRAFANA_ADMIN_USER`     | Admin username for the Grafana dashboard (defaults to `admin`).                                                                    |
-| `TRUSTED_PROXIES`        | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping.                |
-| `IS_DEMO`                | *Optional* Boolean flag to enable demo-specific environment behaviors, such as daily database seeding/reset (defaults to `false`). |
+| Variable Name             | Description                                                                                                                        |
+|:--------------------------|:-----------------------------------------------------------------------------------------------------------------------------------|
+| `VPS_USERNAME`            | SSH system user on the target VPS.                                                                                                 |
+| `DOMAIN`                  | Production domain name configured in Caddy (defaults to `localhost`).                                                              |
+| `SPRING_PROFILES_ACTIVE`  | Active Spring Boot profiles (defaults to `prod`).                                                                                  |
+| `APP_IMAGE_TAG`           | Docker image tag to pull from GitHub Container Registry (defaults to `latest`).                                                    |
+| `POSTGRES_USER`           | PostgreSQL administrative username (defaults to `db_user`).                                                                        |
+| `POSTGRES_DB`             | Name of the primary database (defaults to `flight_reservation_db`).                                                                |
+| `RABBITMQ_USER`           | RabbitMQ username shared by the broker and the app (defaults to `rabbitmq_user`).                                                  |
+| `RESEND_FROM_EMAIL`       | Verified Resend sender address. Required unless `NOTIFICATIONS_MODE` is `OFF`.                                                     |
+| `NOTIFICATIONS_MODE`      | Email delivery mode: `OFF`, `ALLOWLIST` or `ALL` (defaults to `OFF`).                                                              |
+| `NOTIFICATIONS_ALLOWLIST` | *Optional* Comma-separated recipients honoured in `ALLOWLIST` mode.                                                                |
+| `SEED_ADMIN_EMAIL`        | Email for the seeded demo admin account (defaults to `admin@demo.local`).                                                          |
+| `GRAFANA_ADMIN_USER`      | Admin username for the Grafana dashboard (defaults to `admin`).                                                                    |
+| `TRUSTED_PROXIES`         | *Optional* Space-separated CIDR ranges of upstream trusted proxies (e.g., Cloudflare IPs) for Caddy header mapping.                |
+| `IS_DEMO`                 | *Optional* Boolean flag to enable demo-specific environment behaviors, such as daily database seeding/reset (defaults to `false`). |
