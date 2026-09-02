@@ -1,23 +1,32 @@
 package com.github.antorof1.flightreservationservice.reservation;
 
+import com.github.antorof1.flightreservationservice.config.RabbitConfig;
 import com.github.antorof1.flightreservationservice.exception.InvalidReservationStateException;
 import com.github.antorof1.flightreservationservice.exception.SeatAlreadyHeldException;
 import com.github.antorof1.flightreservationservice.exception.SeatUnavailableException;
+import com.github.antorof1.flightreservationservice.flight.Flight;
+import com.github.antorof1.flightreservationservice.reservation.event.ReservationEvent;
+import com.github.antorof1.flightreservationservice.reservation.event.ReservationEventType;
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserRole;
 import com.github.antorof1.flightreservationservice.user.UserService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -48,11 +57,15 @@ class ReservationServiceTest {
     @Mock
     private ValueOperations<String, String> valueOperations;
 
+    @Mock
+    private AmqpTemplate amqpTemplate;
+
     @InjectMocks
     private ReservationService reservationService;
 
     private User user;
     private Seat seat;
+    private Flight flight;
 
     @BeforeEach
     void setUp() {
@@ -63,11 +76,45 @@ class ReservationServiceTest {
             UserRole.USER
         );
         user.setId(1L);
+
+        flight = new Flight(
+            "FL-123",
+            "NYC",
+            "LAX",
+            OffsetDateTime.now().plusDays(5),
+            OffsetDateTime.now().plusDays(5).plusHours(6)
+        );
+        flight.setId(1L);
+
         seat = new Seat();
         seat.setId(1L);
+        seat.setSeatNumber("12A");
+        seat.setFlight(flight);
         seat.setStatus(SeatStatus.AVAILABLE);
 
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
+        TransactionSynchronizationManager.initSynchronization();
+    }
+
+    @AfterEach
+    void tearDown() {
+        TransactionSynchronizationManager.clearSynchronization();
+    }
+
+    private void commitTransaction() {
+        TransactionSynchronizationManager.getSynchronizations().forEach(TransactionSynchronization::afterCommit);
+    }
+
+    private ReservationEvent publishedEvent(String expectedRoutingKey) {
+        ArgumentCaptor<ReservationEvent> captor = ArgumentCaptor.forClass(ReservationEvent.class);
+        verify(amqpTemplate).convertAndSend(
+            eq(RabbitConfig.RESERVATION_EXCHANGE),
+            eq(expectedRoutingKey),
+            captor.capture()
+        );
+
+        return captor.getValue();
     }
 
     @Test
@@ -145,6 +192,53 @@ class ReservationServiceTest {
     }
 
     @Test
+    @DisplayName("Should publish a confirmation event only once the transaction commits")
+    void confirmReservation_PublishesEventAfterCommit() {
+        Long reservationId = 42L;
+        UUID lockToken = UUID.randomUUID();
+        Reservation reservation = new Reservation(user, seat, ReservationStatus.PENDING, lockToken, OffsetDateTime.now(), OffsetDateTime.now()
+            .plusMinutes(10));
+        reservation.setId(reservationId);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(valueOperations.get(anyString())).thenReturn(lockToken.toString());
+
+        reservationService.confirmReservation(reservationId);
+
+        verifyNoInteractions(amqpTemplate);
+
+        commitTransaction();
+
+        ReservationEvent event = publishedEvent(RabbitConfig.RESERVATION_CONFIRMED_KEY);
+        assertThat(event.type()).isEqualTo(ReservationEventType.CONFIRMED);
+        assertThat(event.passengerEmail()).isEqualTo(user.getEmail());
+        assertThat(event.passengerName()).isEqualTo(user.getName());
+        assertThat(event.flightNumber()).isEqualTo(flight.getFlightNumber());
+        assertThat(event.departureAirport()).isEqualTo(flight.getDepartureAirport());
+        assertThat(event.arrivalAirport()).isEqualTo(flight.getArrivalAirport());
+        assertThat(event.departureTime()).isNotBlank();
+        assertThat(event.seatNumber()).isEqualTo(seat.getSeatNumber());
+    }
+
+    @Test
+    @DisplayName("Should not publish an event when confirmation fails")
+    void confirmReservation_TokenMismatch_PublishesNothing() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation(user, seat, ReservationStatus.PENDING, UUID.randomUUID(), OffsetDateTime.now(), OffsetDateTime.now()
+            .plusMinutes(10));
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+        when(valueOperations.get(anyString())).thenReturn("wrong-token");
+
+        assertThatThrownBy(() -> reservationService.confirmReservation(reservationId))
+            .isInstanceOf(InvalidReservationStateException.class);
+
+        commitTransaction();
+
+        verifyNoInteractions(amqpTemplate);
+    }
+
+    @Test
     @DisplayName("Should throw InvalidReservationStateException when confirmation expires")
     void confirmReservation_TokenMismatch_ThrowsException() {
         Long reservationId = 1L;
@@ -176,6 +270,48 @@ class ReservationServiceTest {
 
         assertThat(cancelled.getStatus()).isEqualTo(ReservationStatus.CANCELLED);
         verify(seatService).updateSeatStatus(seat.getId(), SeatStatus.AVAILABLE);
+    }
+
+    @Test
+    @DisplayName("Should publish a cancellation event only once the transaction commits")
+    void cancelReservation_PublishesEventAfterCommit() {
+        Long reservationId = 42L;
+        Reservation reservation = new Reservation(user, seat, ReservationStatus.PENDING, UUID.randomUUID(), OffsetDateTime.now(), OffsetDateTime.now()
+            .plusMinutes(10));
+        reservation.setId(reservationId);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        reservationService.cancelReservation(reservationId);
+
+        verifyNoInteractions(amqpTemplate);
+
+        commitTransaction();
+
+        ReservationEvent event = publishedEvent(RabbitConfig.RESERVATION_CANCELLED_KEY);
+        assertThat(event.type()).isEqualTo(ReservationEventType.CANCELLED);
+        assertThat(event.passengerEmail()).isEqualTo(user.getEmail());
+        assertThat(event.flightNumber()).isEqualTo(flight.getFlightNumber());
+        assertThat(event.seatNumber()).isEqualTo(seat.getSeatNumber());
+    }
+
+    @Test
+    @DisplayName("Should not publish an event when cancellation fails")
+    void cancelReservation_AlreadyCancelled_PublishesNothing() {
+        Long reservationId = 1L;
+        Reservation reservation = new Reservation(user, seat, ReservationStatus.CANCELLED, UUID.randomUUID(), OffsetDateTime.now(), OffsetDateTime.now()
+            .plusMinutes(10));
+        reservation.setId(reservationId);
+
+        when(reservationRepository.findById(reservationId)).thenReturn(Optional.of(reservation));
+
+        assertThatThrownBy(() -> reservationService.cancelReservation(reservationId))
+            .isInstanceOf(InvalidReservationStateException.class)
+            .hasMessageContaining("already cancelled");
+
+        commitTransaction();
+
+        verifyNoInteractions(amqpTemplate);
     }
 
     @Test

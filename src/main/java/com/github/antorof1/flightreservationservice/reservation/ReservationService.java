@@ -1,22 +1,31 @@
 package com.github.antorof1.flightreservationservice.reservation;
 
+import com.github.antorof1.flightreservationservice.config.RabbitConfig;
 import com.github.antorof1.flightreservationservice.exception.InvalidReservationStateException;
 import com.github.antorof1.flightreservationservice.exception.ResourceNotFoundException;
 import com.github.antorof1.flightreservationservice.exception.SeatAlreadyHeldException;
 import com.github.antorof1.flightreservationservice.exception.SeatUnavailableException;
+import com.github.antorof1.flightreservationservice.flight.Flight;
+import com.github.antorof1.flightreservationservice.reservation.event.ReservationEvent;
+import com.github.antorof1.flightreservationservice.reservation.event.ReservationEventType;
 import com.github.antorof1.flightreservationservice.seat.Seat;
 import com.github.antorof1.flightreservationservice.seat.SeatService;
 import com.github.antorof1.flightreservationservice.seat.SeatStatus;
 import com.github.antorof1.flightreservationservice.user.User;
 import com.github.antorof1.flightreservationservice.user.UserService;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -25,18 +34,22 @@ import java.util.concurrent.TimeUnit;
 public class ReservationService {
     private static final String SEAT_LOCK_PREFIX = "seat:lock:";
     private static final long HOLD_MINUTES = 10;
+    private static final DateTimeFormatter DEPARTURE_TIME_FORMATTER =
+        DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm XXX", Locale.ROOT);
 
     private final ReservationRepository reservationRepository;
     private final SeatService seatService;
     private final UserService userService;
     private final StringRedisTemplate redisTemplate;
+    private final AmqpTemplate amqpTemplate;
 
     public ReservationService(ReservationRepository reservationRepository, SeatService seatService,
-                              UserService userService, StringRedisTemplate redisTemplate) {
+                              UserService userService, StringRedisTemplate redisTemplate, AmqpTemplate amqpTemplate) {
         this.reservationRepository = reservationRepository;
         this.seatService = seatService;
         this.userService = userService;
         this.redisTemplate = redisTemplate;
+        this.amqpTemplate = amqpTemplate;
     }
 
     @Transactional
@@ -107,6 +120,9 @@ public class ReservationService {
 
         redisTemplate.delete(seatLockKey);
 
+        publishAfterCommit(RabbitConfig.RESERVATION_CONFIRMED_KEY,
+            toEvent(ReservationEventType.CONFIRMED, reservation));
+
         return reservation;
     }
 
@@ -146,6 +162,9 @@ public class ReservationService {
         reservation.setStatus(ReservationStatus.CANCELLED);
         seatService.updateSeatStatus(reservation.getSeat().getId(), SeatStatus.AVAILABLE);
 
+        publishAfterCommit(RabbitConfig.RESERVATION_CANCELLED_KEY,
+            toEvent(ReservationEventType.CANCELLED, reservation));
+
         return reservation;
     }
 
@@ -170,5 +189,30 @@ public class ReservationService {
         }
 
         reservationRepository.save(reservation);
+    }
+
+    private ReservationEvent toEvent(ReservationEventType type, Reservation reservation) {
+        Seat seat = reservation.getSeat();
+        Flight flight = seat.getFlight();
+
+        return new ReservationEvent(
+            type,
+            reservation.getUser().getEmail(),
+            reservation.getUser().getName(),
+            flight.getFlightNumber(),
+            flight.getDepartureAirport(),
+            flight.getArrivalAirport(),
+            DEPARTURE_TIME_FORMATTER.format(flight.getDepartureTime()),
+            seat.getSeatNumber()
+        );
+    }
+
+    private void publishAfterCommit(String routingKey, ReservationEvent event) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                amqpTemplate.convertAndSend(RabbitConfig.RESERVATION_EXCHANGE, routingKey, event);
+            }
+        });
     }
 }
