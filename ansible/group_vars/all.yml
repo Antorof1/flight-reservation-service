@@ -8,7 +8,15 @@ postgres_db: "{{ lookup('env', 'POSTGRES_DB') | default('flight_reservation_db',
 
 valkey_password: "{{ lookup('env', 'VALKEY_PASSWORD') }}"
 
+rabbitmq_user: "{{ lookup('env', 'RABBITMQ_USER') | default('rabbitmq_user', true) }}"
+rabbitmq_password: "{{ lookup('env', 'RABBITMQ_PASSWORD') }}"
+
 jwt_secret_key: "{{ lookup('env', 'JWT_SECRET_KEY') }}"
+
+resend_api_key: "{{ lookup('env', 'RESEND_API_KEY') }}"
+resend_from_email: "{{ lookup('env', 'RESEND_FROM_EMAIL') }}"
+notifications_mode: "{{ lookup('env', 'NOTIFICATIONS_MODE') | default('OFF', true) }}"
+notifications_allowlist: "{{ lookup('env', 'NOTIFICATIONS_ALLOWLIST') | default('', true) }}"
 
 seed_admin_email: "{{ lookup('env', 'SEED_ADMIN_EMAIL') | default('admin@demo.local', true) }}"
 seed_admin_password: "{{ lookup('env', 'SEED_ADMIN_PASSWORD') }}"
